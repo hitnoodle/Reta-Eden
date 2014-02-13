@@ -16,8 +16,8 @@ public class Mukya : MonoBehaviour
 	private const float MIN_SPEED = 50f;
 	private const float MAX_SPEED = 100f;
 	
-	private const float STATUS_DECREASE_MIN = 0.25f; //Decrease status over time
-	private const float STATUS_DECREASE_MAX = 0.5f;
+	private const float STATUS_DECREASE_MIN = 0.5f; //Decrease status over time
+	private const float STATUS_DECREASE_MAX = 1f;
 	
 	private const float PENALTY_THRESHOLD = 10f; //Percentage where multiplier active
 	private const float DECREASE_MULTIPLIER = 1.5f; //Multiply decrease status
@@ -42,7 +42,7 @@ public class Mukya : MonoBehaviour
 	}
 	private MukyaState _CurrentState = MukyaState.None;
 
-	public delegate void _OnMoveDone();
+	public delegate void _OnMoveDone(Mukya mukya);
 	public _OnMoveDone OnMoveDone;
 
 	private float _Speed;
@@ -73,7 +73,11 @@ public class Mukya : MonoBehaviour
 	//Private access
 	private tk2dSprite _Sprite;
 	private tk2dSpriteAnimator _Animator;
+	private BoxCollider2D _Collider;
 	private Transform _Transform;
+
+	private bool _Penalty;
+	private float[] _StatusDecrease;
 
 	#region Mono Behavior
 
@@ -82,8 +86,13 @@ public class Mukya : MonoBehaviour
 	{
 		_Sprite = GetComponent<tk2dSprite>();
 		_Animator = GetComponent<tk2dSpriteAnimator>();
-
+		_Collider = GetComponent<BoxCollider2D>();
 		_Transform = transform;
+
+		_Penalty = false;
+		_StatusDecrease = new float[3];
+		for(int i=0;i<_StatusDecrease.Length;i++)
+			_StatusDecrease[i] = Random.Range(STATUS_DECREASE_MIN, STATUS_DECREASE_MAX);
 	}
 
 	void Start()
@@ -99,6 +108,9 @@ public class Mukya : MonoBehaviour
 	// Update is called once per frame
 	void Update() 
 	{
+		//Always decrease status
+		DecreaseStatus(Time.deltaTime);
+
 		//Lazy state handling
 		if (_CurrentState == MukyaState.None)
 		{
@@ -120,7 +132,7 @@ public class Mukya : MonoBehaviour
 				_Transform.position = new Vector3(_MoveDestination, currentPos.y, currentPos.z);
 
 				if (OnMoveDone != null)
-					OnMoveDone();
+					OnMoveDone(this);
 			}
 		}
 		else if (_CurrentState == MukyaState.Talking)
@@ -131,9 +143,31 @@ public class Mukya : MonoBehaviour
 
 	#endregion
 
+	#region Collisions
+
+	public bool IsContainingPosition(Vector2 pos)
+	{
+		return _Collider == Physics2D.OverlapPoint(pos);
+	}
+
+	#endregion
+
 	#region State functions
 
-	public void Idle()
+	public void None()
+	{
+		_Animator.Play("idle");
+		_Sprite.renderer.enabled = false;
+
+		_CurrentState = MukyaState.None;
+	}
+
+	public void UnNone()
+	{
+		_Sprite.renderer.enabled = true;
+	}
+
+	public void Idle(Mukya mukya)
 	{
 		OnMoveDone -= Idle;
 
@@ -159,6 +193,9 @@ public class Mukya : MonoBehaviour
 
 	public bool Move(float destination)
 	{
+		//Wth
+		OnMoveDone -= Idle;
+
 		//Outside screen
 		if (destination < START_X || destination > END_X)
 			return false;
@@ -187,19 +224,62 @@ public class Mukya : MonoBehaviour
 
 	#region Status functions
 
+	void DecreaseStatus(float deltaTime)
+	{
+		_EnergyStatus -= _StatusDecrease[0] * deltaTime;
+		if (_EnergyStatus <= 0) _EnergyStatus = 0;
+
+		_SocialStatus -= _StatusDecrease[1] * deltaTime;
+		if (_SocialStatus <= 0) _SocialStatus = 0;
+
+		_WorkStatus -= _StatusDecrease[2] * deltaTime;
+		if (_WorkStatus <= 0) _WorkStatus = 0;
+
+		if (EnergyPercentage() <= PENALTY_THRESHOLD || SocialPercentage() <= PENALTY_THRESHOLD || WorkPercentage() <= PENALTY_THRESHOLD)
+		{
+			//Penalty
+			if (!_Penalty)
+			{
+				for(int i=0;i<_StatusDecrease.Length;i++)
+					_StatusDecrease[i] *= DECREASE_MULTIPLIER;
+
+				_Penalty = true;
+			}
+			else
+			{
+				//Dead.. fucking dead
+				if (_EnergyStatus == 0 && _SocialStatus == 0 && _WorkStatus == 0)
+				{
+					//Destroy(this.gameObject);
+				}
+			}
+		}
+		else
+		{
+			//Reset decrease
+			if (_Penalty) 
+			{
+				for(int i=0;i<_StatusDecrease.Length;i++)
+					_StatusDecrease[i] = Random.Range(STATUS_DECREASE_MIN, STATUS_DECREASE_MAX);
+
+				_Penalty = false;
+			}
+		}
+	}
+
 	public float EnergyPercentage() 
 	{ 
-		return _EnergyStatus / MAX_STATUS; 
+		return _EnergyStatus / MAX_STATUS * 100f; 
 	}
 
 	public float SocialPercentage() 
 	{ 
-		return _SocialStatus / MAX_STATUS; 
+		return _SocialStatus / MAX_STATUS * 100f; 
 	}
 
 	public float WorkPercentage() 
 	{ 
-		return _WorkStatus / MAX_STATUS; 
+		return _WorkStatus / MAX_STATUS * 100f; 
 	}
 
 	public void IncreaseEnergy(float energy)

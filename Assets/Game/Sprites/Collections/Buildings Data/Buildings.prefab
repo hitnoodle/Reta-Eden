@@ -1,0 +1,325 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &100000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 400000}
+  - 114: {fileID: 11400000}
+  m_Layer: 0
+  m_Name: Buildings
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &400000
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d546f34a90531a14eaba82a43b05b86b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 3
+  materialIdsValid: 1
+  needMaterialInstance: 0
+  spriteDefinitions:
+  - name: building_bar
+    boundsData:
+    - {x: .5, y: 175, z: 0}
+    - {x: 431, y: 350, z: 0}
+    untrimmedBoundsData:
+    - {x: .5, y: 175, z: 0}
+    - {x: 431, y: 350, z: 0}
+    texelSize: {x: 1, y: 1}
+    positions:
+    - {x: -215, y: 0, z: 0}
+    - {x: 216, y: 0, z: 0}
+    - {x: -215, y: 350, z: 0}
+    - {x: 216, y: 350, z: 0}
+    normals: []
+    tangents: []
+    uvs:
+    - {x: .358399421, y: .484375983}
+    - {x: .358399421, y: .905272484}
+    - {x: .700194359, y: .484375983}
+    - {x: .700194359, y: .905272484}
+    indices: 000000000300000001000000020000000300000000000000
+    material: {fileID: 2100000, guid: 57c404fd5cd4349eda159a9b55c12e20, type: 2}
+    materialId: 0
+    sourceTextureGUID: 3a7ece0ce468e4c73a3eb68ead7eaced
+    extractRegion: 0
+    regionX: 0
+    regionY: 0
+    regionW: 0
+    regionH: 0
+    flipped: 1
+    complexGeometry: 0
+    physicsEngine: 1
+    colliderType: 0
+    colliderVertices: []
+    colliderIndicesFwd: 
+    colliderIndicesBack: 
+    colliderConvex: 0
+    colliderSmoothSphereCollisions: 0
+    polygonCollider2D: []
+    edgeCollider2D: []
+    attachPoints: []
+  - name: building_shop
+    boundsData:
+    - {x: .5, y: 235, z: 0}
+    - {x: 361, y: 470, z: 0}
+    untrimmedBoundsData:
+    - {x: .5, y: 235, z: 0}
+    - {x: 361, y: 470, z: 0}
+    texelSize: {x: 1, y: 1}
+    positions:
+    - {x: -180, y: 0, z: 0}
+    - {x: 181, y: 0, z: 0}
+    - {x: -180, y: 470, z: 0}
+    - {x: 181, y: 470, z: 0}
+    normals: []
+    tangents: []
+    uvs:
+    - {x: .00195410149, y: .484375983}
+    - {x: .354491204, y: .484375983}
+    - {x: .00195410149, y: .943358421}
+    - {x: .354491204, y: .943358421}
+    indices: 000000000300000001000000020000000300000000000000
+    material: {fileID: 2100000, guid: 57c404fd5cd4349eda159a9b55c12e20, type: 2}
+    materialId: 0
+    sourceTextureGUID: 49c6558d4b74b47d8b99693dce31ba6e
+    extractRegion: 0
+    regionX: 0
+    regionY: 0
+    regionW: 0
+    regionH: 0
+    flipped: 0
+    complexGeometry: 0
+    physicsEngine: 1
+    colliderType: 0
+    colliderVertices: []
+    colliderIndicesFwd: 
+    colliderIndicesBack: 
+    colliderConvex: 0
+    colliderSmoothSphereCollisions: 0
+    polygonCollider2D: []
+    edgeCollider2D: []
+    attachPoints: []
+  - name: building_comm
+    boundsData:
+    - {x: 0, y: 165, z: 0}
+    - {x: 232, y: 330, z: 0}
+    untrimmedBoundsData:
+    - {x: 0, y: 165, z: 0}
+    - {x: 232, y: 330, z: 0}
+    texelSize: {x: 1, y: 1}
+    positions:
+    - {x: -116, y: 0, z: 0}
+    - {x: 116, y: 0, z: 0}
+    - {x: -116, y: 330, z: 0}
+    - {x: 116, y: 330, z: 0}
+    normals: []
+    tangents: []
+    uvs:
+    - {x: .704102516, y: .384766608}
+    - {x: .930663109, y: .384766608}
+    - {x: .704102516, y: .707030296}
+    - {x: .930663109, y: .707030296}
+    indices: 000000000300000001000000020000000300000000000000
+    material: {fileID: 2100000, guid: 57c404fd5cd4349eda159a9b55c12e20, type: 2}
+    materialId: 0
+    sourceTextureGUID: 56eda97e2039b4cb29e5085c845e75d3
+    extractRegion: 0
+    regionX: 0
+    regionY: 0
+    regionW: 0
+    regionH: 0
+    flipped: 0
+    complexGeometry: 0
+    physicsEngine: 1
+    colliderType: 0
+    colliderVertices: []
+    colliderIndicesFwd: 
+    colliderIndicesBack: 
+    colliderConvex: 0
+    colliderSmoothSphereCollisions: 0
+    polygonCollider2D: []
+    edgeCollider2D: []
+    attachPoints: []
+  - name: building_house
+    boundsData:
+    - {x: 0, y: 162, z: 0}
+    - {x: 388, y: 324, z: 0}
+    untrimmedBoundsData:
+    - {x: 0, y: 162, z: 0}
+    - {x: 388, y: 324, z: 0}
+    texelSize: {x: 1, y: 1}
+    positions:
+    - {x: -194, y: 0, z: 0}
+    - {x: 194, y: 0, z: 0}
+    - {x: -194, y: 324, z: 0}
+    - {x: 194, y: 324, z: 0}
+    normals: []
+    tangents: []
+    uvs:
+    - {x: .437500983, y: .00195410149}
+    - {x: .437500983, y: .380858392}
+    - {x: .753905296, y: .00195410149}
+    - {x: .753905296, y: .380858392}
+    indices: 000000000300000001000000020000000300000000000000
+    material: {fileID: 2100000, guid: 57c404fd5cd4349eda159a9b55c12e20, type: 2}
+    materialId: 0
+    sourceTextureGUID: 676bdd6d24c1a46e482bfb8586155f56
+    extractRegion: 0
+    regionX: 0
+    regionY: 0
+    regionW: 0
+    regionH: 0
+    flipped: 1
+    complexGeometry: 0
+    physicsEngine: 1
+    colliderType: 0
+    colliderVertices: []
+    colliderIndicesFwd: 
+    colliderIndicesBack: 
+    colliderConvex: 0
+    colliderSmoothSphereCollisions: 0
+    polygonCollider2D: []
+    edgeCollider2D: []
+    attachPoints: []
+  - name: building_hall
+    boundsData:
+    - {x: 0, y: 245, z: 0}
+    - {x: 442, y: 490, z: 0}
+    untrimmedBoundsData:
+    - {x: 0, y: 245, z: 0}
+    - {x: 442, y: 490, z: 0}
+    texelSize: {x: 1, y: 1}
+    positions:
+    - {x: -221, y: 0, z: 0}
+    - {x: 221, y: 0, z: 0}
+    - {x: -221, y: 490, z: 0}
+    - {x: 221, y: 490, z: 0}
+    normals: []
+    tangents: []
+    uvs:
+    - {x: .00195410149, y: .00195410149}
+    - {x: .433592767, y: .00195410149}
+    - {x: .00195410149, y: .480467767}
+    - {x: .433592767, y: .480467767}
+    indices: 000000000300000001000000020000000300000000000000
+    material: {fileID: 2100000, guid: 57c404fd5cd4349eda159a9b55c12e20, type: 2}
+    materialId: 0
+    sourceTextureGUID: 8d5a8e58316bb420bbc87510f66c1b28
+    extractRegion: 0
+    regionX: 0
+    regionY: 0
+    regionW: 0
+    regionH: 0
+    flipped: 0
+    complexGeometry: 0
+    physicsEngine: 1
+    colliderType: 0
+    colliderVertices: []
+    colliderIndicesFwd: 
+    colliderIndicesBack: 
+    colliderConvex: 0
+    colliderSmoothSphereCollisions: 0
+    polygonCollider2D: []
+    edgeCollider2D: []
+    attachPoints: []
+  - name: building_outer
+    boundsData:
+    - {x: 0, y: 55, z: 0}
+    - {x: 70, y: 110, z: 0}
+    untrimmedBoundsData:
+    - {x: 0, y: 55, z: 0}
+    - {x: 70, y: 110, z: 0}
+    texelSize: {x: 1, y: 1}
+    positions:
+    - {x: -35, y: 0, z: 0}
+    - {x: 35, y: 0, z: 0}
+    - {x: -35, y: 110, z: 0}
+    - {x: 35, y: 110, z: 0}
+    normals: []
+    tangents: []
+    uvs:
+    - {x: .358399421, y: .909180641}
+    - {x: .358399421, y: .977538109}
+    - {x: .465819329, y: .909180641}
+    - {x: .465819329, y: .977538109}
+    indices: 000000000300000001000000020000000300000000000000
+    material: {fileID: 2100000, guid: 57c404fd5cd4349eda159a9b55c12e20, type: 2}
+    materialId: 0
+    sourceTextureGUID: e21ec29018c4b4d9ba4a6f2991572c1a
+    extractRegion: 0
+    regionX: 0
+    regionY: 0
+    regionW: 0
+    regionH: 0
+    flipped: 1
+    complexGeometry: 0
+    physicsEngine: 1
+    colliderType: 0
+    colliderVertices: []
+    colliderIndicesFwd: 
+    colliderIndicesBack: 
+    colliderConvex: 0
+    colliderSmoothSphereCollisions: 0
+    polygonCollider2D: []
+    edgeCollider2D: []
+    attachPoints: []
+  premultipliedAlpha: 0
+  material: {fileID: 0}
+  materials:
+  - {fileID: 2100000, guid: 57c404fd5cd4349eda159a9b55c12e20, type: 2}
+  textures:
+  - {fileID: 2800000, guid: ccb5afe2401cc4ac9b6a29cd36effcac, type: 3}
+  pngTextures: []
+  materialPngTextureId: 00000000
+  textureFilterMode: 1
+  textureMipMaps: 0
+  allowMultipleAtlases: 0
+  spriteCollectionGUID: ff35fee81ff6c474eb2d5af9fec571e9
+  spriteCollectionName: Buildings
+  assetName: 
+  loadable: 0
+  invOrthoSize: 2
+  halfTargetHeight: .5
+  buildKey: 2060321927
+  dataGuid: 77b0686cc9be944ba8afc82a2e30a44d
+  managedSpriteCollection: 0
+  hasPlatformData: 0
+  spriteCollectionPlatforms: []
+  spriteCollectionPlatformGUIDs: []
+--- !u!1001 &100100000
+Prefab:
+  m_ObjectHideFlags: 1
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 0}
+  m_RootGameObject: {fileID: 100000}
+  m_IsPrefabParent: 1
+  m_IsExploded: 1
