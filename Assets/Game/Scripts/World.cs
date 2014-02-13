@@ -75,6 +75,28 @@ public class World : MonoBehaviour
 				tilesTransform.parent = floorsTransform;
 				tilesTransform.position = new Vector3(startX + (i * TILE_WIDTH), 0, 0);
 			}
+
+			//Create more background if needed
+			int more_background = (int)Mathf.Ceil(((float)Width - 2048f) / 1024f);
+			if (more_background > 0)
+			{
+				tk2dSprite[] backgrounds = backgroundsObject.GetComponentsInChildren<tk2dSprite>();
+				for(int i=0;i<more_background;i++)
+				{
+					GameObject newBg;
+
+					if (i%2==0)
+						newBg = (GameObject)Instantiate(backgrounds[0].gameObject);
+					else
+						newBg = (GameObject)Instantiate(backgrounds[1].gameObject);
+
+					newBg.name = "Background" + (3 + i);
+
+					Transform newBgTransform = newBg.transform;
+					newBgTransform.parent = backgroundsObject.transform;
+					newBgTransform.position = new Vector3(2048 + (i * 1024), 768, 1);
+				}
+			}
 		}
 	}
 }

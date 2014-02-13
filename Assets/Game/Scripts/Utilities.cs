@@ -11,7 +11,7 @@ public class Utilities
 	public static GameObject CreateGameObject(string name, Vector3 position, Transform parent)
 	{
 		GameObject go = new GameObject();
-		go.transform.position = Vector3.zero;
+		go.transform.position = position;
 		go.name = name;
 
 		if (parent != null)

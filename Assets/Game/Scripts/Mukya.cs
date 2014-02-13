@@ -4,21 +4,34 @@ using System.Collections;
 // Base sims class
 public class Mukya : MonoBehaviour 
 {
+	#region Constants
+
+	public const float START_Y = 280f;
+
+	private const string DEFAULT_NAME = "Mukya";	
 	private const float MAX_STATUS = 100f;
-	private const float START_Y = 280f;
+
 	private const float MIN_MOVE = 100f;
 
-	public float StartX = 24f;
-	public float EndX = 1000f;
+	private const float MIN_SPEED = 50f;
+	private const float MAX_SPEED = 100f;
+	
+	private const float STATUS_DECREASE_MIN = 0.25f; //Decrease status over time
+	private const float STATUS_DECREASE_MAX = 0.5f;
+	
+	private const float PENALTY_THRESHOLD = 10f; //Percentage where multiplier active
+	private const float DECREASE_MULTIPLIER = 1.5f; //Multiply decrease status
 
-	public float MinSpeed = 50f;
-	public float MaxSpeed = 100f;
+	#endregion
 
-	public float StatusDecreaseMin = 0.25f; //Decrease status over time
-	public float StatusDecreaseMax = 0.5f;
+	#region Shared Mukya Attributes
 
-	public float PenaltyThreshold = 10f; //Percentage where multiplier active
-	public float DecreaseMultiplier = 1.5f; //Multiply decrease status
+	public static float START_X = 50f;
+	public static float END_X = 974f;
+
+	#endregion
+
+	#region State Handling
 
 	private enum MukyaState
 	{
@@ -32,17 +45,37 @@ public class Mukya : MonoBehaviour
 	public delegate void _OnMoveDone();
 	public _OnMoveDone OnMoveDone;
 
-	private float _EnergyStatus = MAX_STATUS;
-	private float _SocialStatus = MAX_STATUS;
-	private float _WorkStatus = MAX_STATUS;
-
-	private tk2dSprite _Sprite;
-	private tk2dSpriteAnimator _Animator;
-
-	private Transform _Transform;
-
 	private float _Speed;
 	private float _MoveDestination;
+
+	#endregion
+
+	#region Unique Attributes and Status
+
+	public enum MukyaRace
+	{
+		None,
+		Beige,
+		Blue,
+		Green,
+		Pink,
+		Yellow
+	}
+	public MukyaRace _Race = MukyaRace.None;
+
+	public string _Name = DEFAULT_NAME;
+	public float _EnergyStatus = MAX_STATUS;
+	public float _SocialStatus = MAX_STATUS;
+	public float _WorkStatus = MAX_STATUS;
+
+	#endregion
+
+	//Private access
+	private tk2dSprite _Sprite;
+	private tk2dSpriteAnimator _Animator;
+	private Transform _Transform;
+
+	#region Mono Behavior
 
 	// Use this for initialization
 	void Awake() 
@@ -55,9 +88,9 @@ public class Mukya : MonoBehaviour
 
 	void Start()
 	{
-		float destination = Random.Range(StartX, EndX);
+		float destination = Random.Range(START_X, END_X);
 		while (Mathf.Abs(_Transform.position.x - destination) < MIN_MOVE)
-			destination = Random.Range(StartX, EndX);
+			destination = Random.Range(START_X, END_X);
 		
 		Move(destination);
 		OnMoveDone += Idle;
@@ -96,7 +129,9 @@ public class Mukya : MonoBehaviour
 		}
 	}
 
-	#region States
+	#endregion
+
+	#region State functions
 
 	public void Idle()
 	{
@@ -114,9 +149,9 @@ public class Mukya : MonoBehaviour
 
 		yield return new WaitForSeconds(wait);
 
-		float destination = Random.Range(StartX, EndX);
+		float destination = Random.Range(START_X, END_X);
 		while (Mathf.Abs(_Transform.position.x - destination) < MIN_MOVE)
-			destination = Random.Range(StartX, EndX);
+			destination = Random.Range(START_X, END_X);
 
 		Move(destination);
 		OnMoveDone += Idle;
@@ -125,7 +160,7 @@ public class Mukya : MonoBehaviour
 	public bool Move(float destination)
 	{
 		//Outside screen
-		if (destination < StartX || destination > EndX)
+		if (destination < START_X || destination > END_X)
 			return false;
 
 		Vector3 currentPos = _Transform.position;
@@ -136,7 +171,7 @@ public class Mukya : MonoBehaviour
 			_Sprite.FlipX = true;
 
 		//Set speed
-		_Speed = Random.Range(MinSpeed, MaxSpeed);
+		_Speed = Random.Range(MIN_SPEED, MAX_SPEED);
 		if (_Sprite.FlipX) 
 			_Speed *= -1;
 
@@ -150,7 +185,7 @@ public class Mukya : MonoBehaviour
 
 	#endregion
 
-	#region Getter-Setter
+	#region Status functions
 
 	public float EnergyPercentage() 
 	{ 
