@@ -25,7 +25,7 @@ public class MainSceneController : MonoBehaviour
 			world.Season = (WorldSeason)season;
 
 			//Load world data
-			world.Size = 1;
+			world.Size = 3;
 		}
 	}
 	
