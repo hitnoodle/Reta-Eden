@@ -8,9 +8,7 @@ public class Mukya : MonoBehaviour
 
 	public const float START_Y = 280f;
 
-	private const string DEFAULT_NAME = "Mukya";	
 	private const float MAX_STATUS = 100f;
-
 	private const float MIN_MOVE = 100f;
 
 	private const float MIN_SPEED = 50f;
@@ -63,7 +61,6 @@ public class Mukya : MonoBehaviour
 	}
 	public MukyaRace _Race = MukyaRace.None;
 
-	public string _Name = DEFAULT_NAME;
 	public float _EnergyStatus = MAX_STATUS;
 	public float _SocialStatus = MAX_STATUS;
 	public float _WorkStatus = MAX_STATUS;
@@ -108,6 +105,15 @@ public class Mukya : MonoBehaviour
 	// Update is called once per frame
 	void Update() 
 	{
+		//Pause
+		if (Utilities.IS_PAUSED) 
+		{
+			if (!_Animator.Paused) _Animator.Pause();
+			return;
+		}
+
+		if (_Animator.Paused) _Animator.Resume();
+
 		//Always decrease status
 		DecreaseStatus(Time.deltaTime);
 

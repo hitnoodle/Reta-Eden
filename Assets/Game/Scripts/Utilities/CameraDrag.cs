@@ -52,6 +52,9 @@ public class CameraDrag : MonoBehaviour
 	// Update is called once per frame
 	void Update() 
 	{
+		//Pause
+		if (Utilities.IS_PAUSED) return;
+
 		if(_UnderInertia && _Time <= _SmoothTime)
 		{
 			MoveCamera(_CurrentSpeed * -1);
@@ -89,5 +92,10 @@ public class CameraDrag : MonoBehaviour
 
 			_LastDragPosition = Input.mousePosition;
 		}
+	}
+
+	public bool IsMoving()
+	{
+		return _CurrentSpeed != 0f || _Time != 0f;
 	}
 }

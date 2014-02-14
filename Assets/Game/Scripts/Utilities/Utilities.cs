@@ -3,6 +3,8 @@ using System.Collections;
 
 public class Utilities 
 {
+	public static bool IS_PAUSED = false;
+
 	public static GameObject CreateGameObject(string name)
 	{
 		return CreateGameObject(name, Vector3.zero, null);

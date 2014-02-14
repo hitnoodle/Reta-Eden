@@ -4,6 +4,13 @@ using System.Collections.Generic;
 
 public class Building : MonoBehaviour 
 {
+	#region Constants
+	
+	public const float START_Y = 280f;
+	public const int MAX_RESIDENT = 3;
+	
+	#endregion
+
 	public enum BuildingType
 	{
 		None,
@@ -19,6 +26,10 @@ public class Building : MonoBehaviour
 	public float _SecondaryIncrease = 4f;
 
 	private List<Mukya> _Residents;
+	public List<Mukya> Residents
+	{
+		get { return _Residents; }
+	}
 
 	private BoxCollider2D _Collider;
 	private Transform _Transform;
@@ -35,6 +46,9 @@ public class Building : MonoBehaviour
 	// Update is called once per frame
 	void Update() 
 	{
+		//Pause
+		if (Utilities.IS_PAUSED) return;
+
 		float delta = Time.deltaTime;
 
 		HandleMukyas(delta);
@@ -105,6 +119,11 @@ public class Building : MonoBehaviour
 	public float Position()
 	{
 		return _Transform.position.x;
+	}
+
+	public bool CanResidenGo()
+	{
+		return _Residents.Count < MAX_RESIDENT;
 	}
 
 	public void AddResident(Mukya mukya)

@@ -6,7 +6,6 @@ public class MainSceneController : MonoBehaviour
 {
 	//Building information
 	public List<Building> Buildings;
-	private Building _SelectedBuilding = null;
 
 	//Mukyas information
 	private List<Mukya> Mukyas;
@@ -14,6 +13,7 @@ public class MainSceneController : MonoBehaviour
 
 	//Main Camera
 	private Camera _Camera;
+	private CameraDrag _CameraDrag;
 
 	// Ongoing Mukya to its building
 	private Hashtable _OngoingResidents;
@@ -27,6 +27,7 @@ public class MainSceneController : MonoBehaviour
 
 		//Set camera
 		_Camera = Camera.main;
+		_CameraDrag = _Camera.GetComponent<CameraDrag>();
 
 		//Load scene from data
 		CreateScene();
@@ -72,7 +73,7 @@ public class MainSceneController : MonoBehaviour
 				Mukyas.Add(mukya);
 
 				Transform mukyaTransform = mukyaObject.transform;
-				mukyaTransform.name = mukya._Name;
+				mukyaTransform.name = "Mukya" + mukya._Race.ToString();
 				mukyaTransform.parent = mukyasTransform;
 				
 				float x = Random.Range(Mukya.START_X, Mukya.END_X);
@@ -84,44 +85,112 @@ public class MainSceneController : MonoBehaviour
 	// Update is called once per frame
 	void Update() 
 	{
-		if (Input.GetMouseButtonUp(0))
+		//Pause
+		if (Utilities.IS_PAUSED) return;
+
+		//When released
+		if (Input.GetMouseButtonUp(0) && !_CameraDrag.IsMoving())
 		{
+			//Translate to screen space
 			Vector3 pos = _Camera.ScreenToWorldPoint(Input.mousePosition);
 			Vector2 pos2D = new Vector2(pos.x, pos.y);
 
-			if (_SelectedMukya != null)
+			//Touching mukyas?
+			Mukya touchedMukya = GetSelectedMukya(pos2D);
+
+			//Check other
+			if (touchedMukya == null)
 			{
-				_SelectedBuilding = GetSelectedBuilding(pos);
-				if (_SelectedBuilding != null)
+				//Touching building?
+				Building touchedBuilding = GetSelectedBuilding(pos);
+				if (touchedBuilding != null)
 				{
-					if (_OngoingResidents.ContainsKey(_SelectedMukya))
+					//Make mukya go to building if selected before
+					if (_SelectedMukya != null)
 					{
-						_SelectedMukya.OnMoveDone -= AddOngoingResident;
-						_OngoingResidents.Remove(_SelectedMukya);
+						//Only if it's these buildings of course
+						if (touchedBuilding._Type == Building.BuildingType.Bar ||
+						    touchedBuilding._Type == Building.BuildingType.House ||
+						    touchedBuilding._Type == Building.BuildingType.OuterWorld ||
+						    touchedBuilding._Type == Building.BuildingType.Shop)
+						{
+							//Cancel if already moving
+							if (_OngoingResidents.ContainsKey(_SelectedMukya))
+							{
+								_SelectedMukya.OnMoveDone -= AddOngoingResident;
+								_OngoingResidents.Remove(_SelectedMukya);
+							}
+							
+							_SelectedMukya.Move(touchedBuilding.Position());
+							_SelectedMukya.OnMoveDone += AddOngoingResident;
+							
+							_OngoingResidents.Add(_SelectedMukya, touchedBuilding);
+						}
+						else
+						{
+							//Enable HUD
+							ShowBuildingUI(touchedBuilding);
+						}
 					}
-
-					_SelectedMukya.Move(_SelectedBuilding.Position());
-					_SelectedMukya.OnMoveDone += AddOngoingResident;
-
-					_OngoingResidents.Add(_SelectedMukya, _SelectedBuilding);
+					else
+					{
+						//Just touching the building, enable HUD
+						ShowBuildingUI(touchedBuilding);
+					}
 				}
 			}
 
-			_SelectedMukya = GetSelectedMukya(pos2D);
-		}
+			//Continue
+			_SelectedMukya = touchedMukya;
 
-		if (_SelectedMukya != null)
-			Debug.Log(_SelectedMukya._Name + " " + _SelectedMukya.EnergyPercentage() + " " + _SelectedMukya.SocialPercentage() + " " + _SelectedMukya.WorkPercentage());
+			if (_SelectedMukya != null)
+				HUD.ShowMukyaInformation(_SelectedMukya);
+			else
+				HUD.HideMukyaInformation();
+		}
 	}
+
+	#region Resident handling
 
 	private void AddOngoingResident(Mukya mukya)
 	{
 		mukya.OnMoveDone -= AddOngoingResident;
 
 		Building building = (Building)_OngoingResidents[mukya];
-		building.AddResident(mukya);
+
+		if (building.CanResidenGo()) 
+			building.AddResident(mukya);
+		else 
+			mukya.Idle(mukya);
 
 		_OngoingResidents.Remove(mukya);
+	}
+
+	#endregion
+
+	#region Touch handling
+
+	private void ShowBuildingUI(Building building)
+	{
+		if (building._Type == Building.BuildingType.Bar ||
+		    building._Type == Building.BuildingType.House ||
+		    building._Type == Building.BuildingType.OuterWorld ||
+		    building._Type == Building.BuildingType.Shop)
+		{
+			HUD.ShowResidentsMenu(building);
+		}
+		else if (building._Type == Building.BuildingType.CommunicationCenter)
+		{
+			HUD.ShowCommunicationCenterMenu();
+		}
+		else if (building._Type == Building.BuildingType.CityHall)
+		{
+			HUD.ShowCityHallMenu();
+		}
+		else if (building._Type == Building.BuildingType.None)
+		{
+			HUD.ShowBuildMenu();
+		}
 	}
 
 	private Building GetSelectedBuilding(Vector2 pos)
@@ -145,4 +214,6 @@ public class MainSceneController : MonoBehaviour
 
 		return null;
 	}
+
+	#endregion
 }
