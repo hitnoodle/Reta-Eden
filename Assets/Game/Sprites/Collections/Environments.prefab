@@ -112,7 +112,7 @@ MonoBehaviour:
     scale: {x: 1, y: 1, z: 1}
     texture: {fileID: 2800000, guid: 14bf39eb82bb14249ae9a82f72c90165, type: 3}
     materialId: 0
-    anchor: 4
+    anchor: 7
     anchorX: 0
     anchorY: 0
     overrideMesh: {fileID: 0}
@@ -192,7 +192,7 @@ MonoBehaviour:
     scale: {x: 1, y: 1, z: 1}
     texture: {fileID: 2800000, guid: 2350ac5c33493477e81b3fe2b47734a2, type: 3}
     materialId: 0
-    anchor: 4
+    anchor: 7
     anchorX: 0
     anchorY: 0
     overrideMesh: {fileID: 0}
@@ -272,7 +272,7 @@ MonoBehaviour:
     scale: {x: 1, y: 1, z: 1}
     texture: {fileID: 2800000, guid: 5daa1e0ef572a45cd8edb55ed6a21343, type: 3}
     materialId: 0
-    anchor: 4
+    anchor: 7
     anchorX: 0
     anchorY: 0
     overrideMesh: {fileID: 0}
@@ -592,7 +592,7 @@ MonoBehaviour:
     scale: {x: 1, y: 1, z: 1}
     texture: {fileID: 2800000, guid: d8aa0d24dd9af482e90e1edd937488ee, type: 3}
     materialId: 0
-    anchor: 4
+    anchor: 7
     anchorX: 0
     anchorY: 0
     overrideMesh: {fileID: 0}

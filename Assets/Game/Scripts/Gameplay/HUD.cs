@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using System.Text;
 
 public class HUD : MonoBehaviour 
 {
@@ -24,6 +26,8 @@ public class HUD : MonoBehaviour
 	public tk2dUIItem MenuButtonItem = null;
 
 	public GameObject PlayerInformation = null;
+	public tk2dTextMesh Money = null;
+	public tk2dTextMesh[] Diamonds = null;
 
 	public GameObject MukyaInformation = null;
 	public tk2dSprite MukyaMini = null;
@@ -43,6 +47,10 @@ public class HUD : MonoBehaviour
 	public tk2dUIItem ExchangeCrystalButton = null;
 
 	public GameObject ResidentMenu = null;
+	public tk2dSprite[] ResidentIcons;
+	public tk2dTextMesh[] ResidentStatus;
+	public tk2dTextMesh[] ResidentEmptyStatus;
+	public tk2dUIItem[] ResidentOutButtons;
 
 	#endregion
 
@@ -51,6 +59,8 @@ public class HUD : MonoBehaviour
 
 	private Mukya _CurrentMukya = null;
 	private Building _CurrentBuilding = null;
+
+	private bool _CanIdleClick = true;
 
 	#region Mono Behavior
 
@@ -79,9 +89,14 @@ public class HUD : MonoBehaviour
 				if (_ClickBoundary != Physics2D.OverlapPoint(pos2D))
 					ExitState();
 			}
+
+			if (_State == UIState.ResidentsMenu)
+				UpdateResidentsStatus();
 		}
 		else
 		{
+			if (!_CanIdleClick) _CanIdleClick = true;
+
 			//Update mukya information if shown
 			if (_CurrentMukya != null)
 			{
@@ -95,6 +110,13 @@ public class HUD : MonoBehaviour
 	#endregion
 
 	#region UI handler
+
+	IEnumerator Done()
+	{
+		yield return new WaitForSeconds(0.1f);
+
+		ExitState();
+	}
 
 	private void EnableOverlay()
 	{
@@ -175,7 +197,8 @@ public class HUD : MonoBehaviour
 
 	private void ExchangeCrystal()
 	{
-
+		MainSceneController.ExchangeMoneyWithCrystal();
+		StartCoroutine(Done());
 	}
 	
 	private void ExitCityHallMenu()
@@ -192,6 +215,9 @@ public class HUD : MonoBehaviour
 
 	private void EnterResidentMenu()
 	{
+		//Don't pause
+		Utilities.IS_PAUSED = false;
+
 		MultipurposeBox.SetActive(true);
 		MultipurposeTitle.SetActive(true);
 		Title.text = _CurrentBuilding._Type.ToString();
@@ -199,12 +225,93 @@ public class HUD : MonoBehaviour
 		ResidentMenu.SetActive(true);
 		
 		_ClickBoundary = ResidentMenu.GetComponent<BoxCollider2D>();
+
+		ResetResidentMenu();
+		InitializeResidentMenu();
+	}
+
+	private void ResetResidentMenu()
+	{
+		for(int i=0;i<Building.MAX_RESIDENT;i++)
+		{
+			ResidentOutButtons[i].OnClickUIItem -= OutResident;
+			
+			ResidentIcons[i].gameObject.SetActive(false);
+			ResidentStatus[i].gameObject.SetActive(false);
+			ResidentEmptyStatus[i].gameObject.SetActive(false);
+			ResidentOutButtons[i].gameObject.SetActive(false);
+		}
+	}
+
+	private void InitializeResidentMenu()
+	{
+		//Initiate buttons
+		List<Mukya> residents = _CurrentBuilding.Residents;
+		int resident_count = residents.Count;
+		for(int i=0;i<resident_count;i++)
+		{
+			Mukya mukya = residents[i];
+
+			string curr_name = "alien" + mukya._Race + "_badge1";
+			ResidentIcons[i].SetSprite(curr_name);
+
+			StringBuilder sb = new StringBuilder();
+			sb.Append(mukya.EnergyPercentage().ToString("0"));
+			sb.Append(" ");
+			sb.Append(mukya.SocialPercentage().ToString("0"));
+			sb.Append(" ");
+			sb.Append(mukya.WorkPercentage().ToString("0"));
+			ResidentStatus[i].text = sb.ToString();
+
+			ResidentOutButtons[i].OnClickUIItem += OutResident;
+
+			ResidentIcons[i].gameObject.SetActive(true);
+			ResidentStatus[i].gameObject.SetActive(true);
+			ResidentOutButtons[i].gameObject.SetActive(true);
+		}
+		
+		//Empty list
+		int empty = Building.MAX_RESIDENT - resident_count;
+		if (empty > 0)
+		{
+			for(int i=resident_count;i<Building.MAX_RESIDENT;i++)
+				ResidentEmptyStatus[i].gameObject.SetActive(true);
+		}
+	}
+
+	private void UpdateResidentsStatus()
+	{
+		List<Mukya> residents = _CurrentBuilding.Residents;
+		int resident_count = residents.Count;
+		for(int i=0;i<resident_count;i++)
+		{
+			Mukya mukya = residents[i];
+			
+			StringBuilder sb = new StringBuilder();
+			sb.Append(mukya.EnergyPercentage().ToString("0"));
+			sb.Append(" ");
+			sb.Append(mukya.SocialPercentage().ToString("0"));
+			sb.Append(" ");
+			sb.Append(mukya.WorkPercentage().ToString("0"));
+			ResidentStatus[i].text = sb.ToString();
+		}
+	}
+
+	private void OutResident(tk2dUIItem outButton)
+	{
+		string index_string = outButton.name.Substring(0,1);
+		int index = System.Int32.Parse(index_string) - 1;
+		_CurrentBuilding.RemoveResident(index);
+
+		ResetResidentMenu();
+		InitializeResidentMenu();
 	}
 	
 	private void ExitResidentMenu()
 	{
 		_ClickBoundary = null;
-		
+
+		ResetResidentMenu();
 		ResidentMenu.SetActive(false);
 		
 		MultipurposeBox.SetActive(false);
@@ -235,6 +342,7 @@ public class HUD : MonoBehaviour
 
 		DisableOverlay();
 		Utilities.IS_PAUSED = false;
+		_CanIdleClick = false;
 
 		//Back to idle
 		_State = UIState.Idle;
@@ -243,6 +351,13 @@ public class HUD : MonoBehaviour
 	#endregion
 
 	#region Static functions
+
+	public static bool CanIdleClick()
+	{
+		if (s_Instance == null) return false;
+
+		return s_Instance._CanIdleClick;
+	}
 
 	public static void ShowMukyaInformation(Mukya mukya)
 	{
@@ -261,6 +376,23 @@ public class HUD : MonoBehaviour
 		
 		s_Instance._CurrentMukya = null;
 		s_Instance.MukyaInformation.SetActive(false);
+	}
+
+	public static void SetMoney(int money)
+	{
+		if (s_Instance == null) return;
+
+		s_Instance.Money.text = money.ToString();
+	}
+
+	public static void SetDiamond(int index, int diamond)
+	{
+		if (s_Instance == null) return;
+
+		if (index >= 0 && index < 4)
+		{
+			s_Instance.Diamonds[index].text = diamond.ToString();
+		}
 	}
 
 	public static void ShowPauseMenu()

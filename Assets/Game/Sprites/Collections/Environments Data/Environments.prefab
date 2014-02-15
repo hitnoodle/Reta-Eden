@@ -85,17 +85,17 @@ MonoBehaviour:
     attachPoints: []
   - name: gemYellow
     boundsData:
-    - {x: 1.90734863e-06, y: 0, z: 0}
-    - {x: 34, y: 23.9999981, z: 0}
+    - {x: 1.90734863e-06, y: 35, z: 0}
+    - {x: 34, y: 24, z: 0}
     untrimmedBoundsData:
-    - {x: 0, y: 0, z: 0}
+    - {x: 0, y: 35, z: 0}
     - {x: 70, y: 70, z: 0}
     texelSize: {x: 1, y: 1}
     positions:
-    - {x: -16.9999981, y: -11.999999, z: 0}
-    - {x: 17.0000019, y: -11.999999, z: 0}
-    - {x: -16.9999981, y: 11.999999, z: 0}
-    - {x: 17.0000019, y: 11.999999, z: 0}
+    - {x: -16.9999981, y: 23, z: 0}
+    - {x: 17.0000019, y: 23, z: 0}
+    - {x: -16.9999981, y: 47, z: 0}
+    - {x: 17.0000019, y: 47, z: 0}
     normals: []
     tangents: []
     uvs:
@@ -167,17 +167,17 @@ MonoBehaviour:
     attachPoints: []
   - name: gemBlue
     boundsData:
-    - {x: 1.90734863e-06, y: 0, z: 0}
-    - {x: 34, y: 23.9999981, z: 0}
+    - {x: 1.90734863e-06, y: 35, z: 0}
+    - {x: 34, y: 24, z: 0}
     untrimmedBoundsData:
-    - {x: 0, y: 0, z: 0}
+    - {x: 0, y: 35, z: 0}
     - {x: 70, y: 70, z: 0}
     texelSize: {x: 1, y: 1}
     positions:
-    - {x: -16.9999981, y: -11.999999, z: 0}
-    - {x: 17.0000019, y: -11.999999, z: 0}
-    - {x: -16.9999981, y: 11.999999, z: 0}
-    - {x: 17.0000019, y: 11.999999, z: 0}
+    - {x: -16.9999981, y: 23, z: 0}
+    - {x: 17.0000019, y: 23, z: 0}
+    - {x: -16.9999981, y: 47, z: 0}
+    - {x: 17.0000019, y: 47, z: 0}
     normals: []
     tangents: []
     uvs:
@@ -249,17 +249,17 @@ MonoBehaviour:
     attachPoints: []
   - name: gemGreen
     boundsData:
-    - {x: 1.90734863e-06, y: 0, z: 0}
-    - {x: 34, y: 23.9999981, z: 0}
+    - {x: 1.90734863e-06, y: 35, z: 0}
+    - {x: 34, y: 24, z: 0}
     untrimmedBoundsData:
-    - {x: 0, y: 0, z: 0}
+    - {x: 0, y: 35, z: 0}
     - {x: 70, y: 70, z: 0}
     texelSize: {x: 1, y: 1}
     positions:
-    - {x: -16.9999981, y: -11.999999, z: 0}
-    - {x: 17.0000019, y: -11.999999, z: 0}
-    - {x: -16.9999981, y: 11.999999, z: 0}
-    - {x: 17.0000019, y: 11.999999, z: 0}
+    - {x: -16.9999981, y: 23, z: 0}
+    - {x: 17.0000019, y: 23, z: 0}
+    - {x: -16.9999981, y: 47, z: 0}
+    - {x: 17.0000019, y: 47, z: 0}
     normals: []
     tangents: []
     uvs:
@@ -577,17 +577,17 @@ MonoBehaviour:
     attachPoints: []
   - name: gemRed
     boundsData:
-    - {x: 1.90734863e-06, y: 0, z: 0}
-    - {x: 34, y: 23.9999981, z: 0}
+    - {x: 1.90734863e-06, y: 35, z: 0}
+    - {x: 34, y: 24, z: 0}
     untrimmedBoundsData:
-    - {x: 0, y: 0, z: 0}
+    - {x: 0, y: 35, z: 0}
     - {x: 70, y: 70, z: 0}
     texelSize: {x: 1, y: 1}
     positions:
-    - {x: -16.9999981, y: -11.999999, z: 0}
-    - {x: 17.0000019, y: -11.999999, z: 0}
-    - {x: -16.9999981, y: 11.999999, z: 0}
-    - {x: 17.0000019, y: 11.999999, z: 0}
+    - {x: -16.9999981, y: 23, z: 0}
+    - {x: 17.0000019, y: 23, z: 0}
+    - {x: -16.9999981, y: 47, z: 0}
+    - {x: 17.0000019, y: 47, z: 0}
     normals: []
     tangents: []
     uvs:
@@ -674,7 +674,7 @@ MonoBehaviour:
   loadable: 0
   invOrthoSize: 2
   halfTargetHeight: .5
-  buildKey: 1950366129
+  buildKey: 1579763231
   dataGuid: ccafc42dc0821442da97d9bf56705f80
   managedSpriteCollection: 0
   hasPlatformData: 0

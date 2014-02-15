@@ -4,12 +4,41 @@ using System.Collections.Generic;
 
 public class MainSceneController : MonoBehaviour 
 {
+	public const int MAX_PLAYER_DIAMOND = 99;
+	public const int DIAMOND_TYPES = 4;
+	public const int MAX_DIAMOND_SPAWNED = 20;
+
+	public const int MIN_DIAMOND_SPAWNER_TIME = 3;
+	public const int MAX_DIAMOND_SPAWNER_TIME = 12;
+
+	private static MainSceneController s_Instance;
+
 	//Building information
 	public List<Building> Buildings;
 
 	//Mukyas information
 	private List<Mukya> Mukyas;
 	private Mukya _SelectedMukya = null;
+
+	//Diamond information
+	private List<Diamond> Diamonds;
+	private List<Diamond> DiamondsActive;
+
+	//Player information
+	private int _Money;
+	public int Money
+	{
+		get { return _Money; }
+		set
+		{
+			_Money = value;
+			if (_Money < 0) _Money = 0;
+
+			HUD.SetMoney(_Money);
+		}
+	}
+
+	private int[] _Diamonds;
 
 	//Main Camera
 	private Camera _Camera;
@@ -21,8 +50,15 @@ public class MainSceneController : MonoBehaviour
 	// Use this for initialization
 	void Awake() 
 	{
+		s_Instance = this;
+
 		//Create arrays
 		Mukyas = new List<Mukya>();
+
+		Diamonds = new List<Diamond>();
+		DiamondsActive = new List<Diamond>();
+
+		_Diamonds = new int[DIAMOND_TYPES];
 		_OngoingResidents = new Hashtable();
 
 		//Set camera
@@ -31,6 +67,13 @@ public class MainSceneController : MonoBehaviour
 
 		//Load scene from data
 		CreateScene();
+
+		//Default value
+		Money = 100000;
+		for(int i=0;i<DIAMOND_TYPES;i++) SetDiamond(i, 9);
+
+		//Spawn diamonds
+		StartCoroutine(SpawnDiamonds());
 	}
 
 	void CreateScene()
@@ -80,6 +123,105 @@ public class MainSceneController : MonoBehaviour
 				mukyaTransform.localPosition = new Vector3(x, 0, 0);
 			}
 		}
+
+		//CreateDiamonds
+		GameObject diamondsObject = Utilities.CreateGameObject("Diamonds", new Vector3(0, Diamond.START_Y, -3), null);
+		Transform diamondsTransform = diamondsObject.transform;
+
+		for(int i=0;i<DIAMOND_TYPES;i++)
+		{
+			int num = Diamond.DIAMOND_SPAWN_RATES[i] * MAX_DIAMOND_SPAWNED / 100;
+			Diamond.DiamondType type = (Diamond.DiamondType)i;
+			string type_string = type.ToString();
+
+			for(int j=0;j<num;j++)
+			{
+				GameObject diamondObject = (GameObject)Instantiate(Resources.Load("Prefabs/Diamond_" + type_string));
+
+				Diamond diamond = diamondObject.GetComponent<Diamond>();
+				Diamonds.Add(diamond);
+
+				Transform diamondTransform = diamondObject.transform;
+				diamondTransform.name = "Diamond" + type_string;
+				diamondTransform.parent = diamondsTransform;
+
+				diamondObject.SetActive(false);
+			}
+		}
+
+		//Shuffle diamond arrays first
+		System.Random r = new System.Random();
+		int n = Diamonds.Count;  
+		while (n > 1) {  
+			n--;  
+			int k = r.Next(n + 1);  
+			Diamond value = Diamonds[k];  
+			Diamonds[k] = Diamonds[n];  
+			Diamonds[n] = value;  
+		}  
+	}
+
+	IEnumerator SpawnDiamonds()
+	{
+		int wait = Random.Range(MIN_DIAMOND_SPAWNER_TIME, MAX_DIAMOND_SPAWNER_TIME);
+		wait = 0;
+
+		while(true)
+		{
+			yield return new WaitForSeconds(wait);
+
+			//Spawn diamonds at buildings
+			foreach(Building b in Buildings)
+			{
+				if (b._Type == Building.BuildingType.Bar ||
+				    b._Type == Building.BuildingType.House ||
+				    b._Type == Building.BuildingType.OuterWorld ||
+				    b._Type == Building.BuildingType.Shop)
+				{
+					if (b.TotalResidents() > 0)
+					{
+						//Decrease timer according to building residents
+						int times = MAX_DIAMOND_SPAWNER_TIME - MIN_DIAMOND_SPAWNER_TIME / Building.MAX_RESIDENT;
+						int dec_timer = times * b.TotalResidents();
+						int spawn = Random.Range(MIN_DIAMOND_SPAWNER_TIME, MAX_DIAMOND_SPAWNER_TIME - dec_timer);
+
+						StartCoroutine(SpawnDiamond(b, spawn));
+					}
+				}
+			}
+
+			wait = Random.Range(MIN_DIAMOND_SPAWNER_TIME, MAX_DIAMOND_SPAWNER_TIME);
+		}
+	}
+
+	IEnumerator SpawnDiamond(Building b, int delay)
+	{
+		yield return new WaitForSeconds(delay);
+
+		//Hack when pause
+		while (Utilities.IS_PAUSED)
+			yield return new WaitForSeconds(delay);
+
+		if (DiamondsActive.Count < MAX_DIAMOND_SPAWNED)
+		{
+			Diamond d = Diamonds[0];
+			Diamonds.RemoveAt(0);
+
+			d.Spawn(b.Position());
+			d.OnSpawnDone += UnSpawnDiamond;
+
+			DiamondsActive.Add(d);
+		}
+	}
+
+	void UnSpawnDiamond(Diamond d)
+	{
+		d.OnSpawnDone -= UnSpawnDiamond;
+
+		d.gameObject.SetActive(false);
+
+		DiamondsActive.Remove(d);
+		Diamonds.Add(d);
 	}
 	
 	// Update is called once per frame
@@ -95,6 +237,16 @@ public class MainSceneController : MonoBehaviour
 			Vector3 pos = _Camera.ScreenToWorldPoint(Input.mousePosition);
 			Vector2 pos2D = new Vector2(pos.x, pos.y);
 
+			Diamond touchedDiamond = GetSelectedDiamond(pos2D);
+			if (touchedDiamond != null)
+			{
+				int index = (int)touchedDiamond._Type;
+				SetDiamond(index, _Diamonds[index] + 1);
+				UnSpawnDiamond(touchedDiamond);
+
+				return;
+			}
+
 			//Touching mukyas?
 			Mukya touchedMukya = GetSelectedMukya(pos2D);
 
@@ -103,7 +255,7 @@ public class MainSceneController : MonoBehaviour
 			{
 				//Touching building?
 				Building touchedBuilding = GetSelectedBuilding(pos);
-				if (touchedBuilding != null)
+				if (touchedBuilding != null && HUD.CanIdleClick())
 				{
 					//Make mukya go to building if selected before
 					if (_SelectedMukya != null)
@@ -150,25 +302,15 @@ public class MainSceneController : MonoBehaviour
 		}
 	}
 
-	#region Resident handling
-
-	private void AddOngoingResident(Mukya mukya)
+	private void SetDiamond(int index, int value)
 	{
-		mukya.OnMoveDone -= AddOngoingResident;
+		int newValue = value;
+		if (newValue < 0) newValue = 0;
+		else if (newValue > MAX_PLAYER_DIAMOND) newValue = MAX_PLAYER_DIAMOND;
 
-		Building building = (Building)_OngoingResidents[mukya];
-
-		if (building.CanResidenGo()) 
-			building.AddResident(mukya);
-		else 
-			mukya.Idle(mukya);
-
-		_OngoingResidents.Remove(mukya);
+		_Diamonds[index] = newValue;
+		HUD.SetDiamond(index, newValue);
 	}
-
-	#endregion
-
-	#region Touch handling
 
 	private void ShowBuildingUI(Building building)
 	{
@@ -193,6 +335,37 @@ public class MainSceneController : MonoBehaviour
 		}
 	}
 
+	private void AddOngoingResident(Mukya mukya)
+	{
+		if (mukya == _SelectedMukya)
+		{
+			_SelectedMukya = null;
+			HUD.HideMukyaInformation();
+		}
+			
+		mukya.OnMoveDone -= AddOngoingResident;
+
+		Building building = (Building)_OngoingResidents[mukya];
+
+		if (building.CanResidenGo()) 
+			building.AddResident(mukya);
+		else 
+			mukya.Idle(mukya);
+
+		_OngoingResidents.Remove(mukya);
+	}
+
+	private Diamond GetSelectedDiamond(Vector2 pos)
+	{
+		foreach(Diamond diamond in DiamondsActive)
+		{
+			if (diamond.IsContainingPosition(pos))
+				return diamond;
+		}
+		
+		return null;
+	}
+
 	private Building GetSelectedBuilding(Vector2 pos)
 	{
 		foreach(Building building in Buildings)
@@ -215,5 +388,25 @@ public class MainSceneController : MonoBehaviour
 		return null;
 	}
 
-	#endregion
+	public static void ExchangeMoneyWithCrystal()
+	{
+		if (s_Instance == null) return;
+
+		int oldMoney = s_Instance.Money;
+		for(int i=0;i<DIAMOND_TYPES;i++)
+		{
+			oldMoney += s_Instance._Diamonds[i] * Diamond.DIAMOND_PRICE[i];
+			s_Instance.SetDiamond(i,0);
+		}
+
+		s_Instance.Money = oldMoney;
+	}
+
+	public static void DecreaseMoney(int money)
+	{
+		if (s_Instance == null) return;
+
+		int oldMoney = s_Instance.Money - money;
+		s_Instance.Money = oldMoney;
+	}
 }

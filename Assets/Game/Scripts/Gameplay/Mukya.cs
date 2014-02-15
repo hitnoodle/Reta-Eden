@@ -34,9 +34,7 @@ public class Mukya : MonoBehaviour
 	private enum MukyaState
 	{
 		None,	//Don't do shit (ex: at building)
-		Idle,	//Stop -> moving around -> stop
 		Moving,	//Moving to certain destination
-		Talking	//Talking with another Mukya
 	}
 	private MukyaState _CurrentState = MukyaState.None;
 
@@ -118,15 +116,7 @@ public class Mukya : MonoBehaviour
 		DecreaseStatus(Time.deltaTime);
 
 		//Lazy state handling
-		if (_CurrentState == MukyaState.None)
-		{
-
-		}
-		else if (_CurrentState == MukyaState.Idle)
-		{
-
-		}
-		else if (_CurrentState == MukyaState.Moving)
+		if (_CurrentState == MukyaState.Moving)
 		{
 			Vector3 currentPos = _Transform.position;
 			currentPos.x += _Speed * Time.deltaTime;
@@ -141,10 +131,6 @@ public class Mukya : MonoBehaviour
 					OnMoveDone(this);
 			}
 		}
-		else if (_CurrentState == MukyaState.Talking)
-		{
-			
-		}
 	}
 
 	#endregion
@@ -153,6 +139,8 @@ public class Mukya : MonoBehaviour
 
 	public bool IsContainingPosition(Vector2 pos)
 	{
+		if (!_Collider.enabled) return false;
+
 		return _Collider == Physics2D.OverlapPoint(pos);
 	}
 
@@ -164,6 +152,7 @@ public class Mukya : MonoBehaviour
 	{
 		_Animator.Play("idle");
 		_Sprite.renderer.enabled = false;
+		_Collider.enabled = false;
 
 		_CurrentState = MukyaState.None;
 	}
@@ -171,6 +160,9 @@ public class Mukya : MonoBehaviour
 	public void UnNone()
 	{
 		_Sprite.renderer.enabled = true;
+		_Collider.enabled = true;
+
+		Idle(this);
 	}
 
 	public void Idle(Mukya mukya)

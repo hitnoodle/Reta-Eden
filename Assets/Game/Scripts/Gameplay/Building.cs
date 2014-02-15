@@ -50,9 +50,7 @@ public class Building : MonoBehaviour
 		if (Utilities.IS_PAUSED) return;
 
 		float delta = Time.deltaTime;
-
 		HandleMukyas(delta);
-		ThrowItems(delta);
 	}
 
 	#region Behavior handler
@@ -71,39 +69,11 @@ public class Building : MonoBehaviour
 			{
 				mukya.IncreaseEnergy(_PrimaryIncrease * delta);
 			}
-			else if (_Type == BuildingType.OuterWorld)
+			else if (_Type == BuildingType.OuterWorld || _Type == BuildingType.Shop)
 			{
 				mukya.IncreaseWork(_PrimaryIncrease * delta);
 				mukya.IncreaseSocial(_SecondaryIncrease * delta);
 			}
-		}
-	}
-
-	void ThrowItems(float delta)
-	{
-		if (_Type == BuildingType.Bar)
-		{
-			
-		}
-		else if (_Type == BuildingType.CommunicationCenter)
-		{
-			
-		}
-		else if (_Type == BuildingType.CityHall)
-		{
-			
-		}
-		else if (_Type == BuildingType.House)
-		{
-			
-		}
-		else if (_Type == BuildingType.OuterWorld)
-		{
-			
-		}
-		else if (_Type == BuildingType.Shop)
-		{
-			
 		}
 	}
 
@@ -113,6 +83,8 @@ public class Building : MonoBehaviour
 
 	public bool IsContainingPosition(Vector2 pos)
 	{
+		if (!_Collider.enabled) return false;
+
 		return _Collider == Physics2D.OverlapPoint(pos);
 	}
 
@@ -121,15 +93,27 @@ public class Building : MonoBehaviour
 		return _Transform.position.x;
 	}
 
+	public int TotalResidents()
+	{
+		return _Residents.Count;
+	}
+
 	public bool CanResidenGo()
 	{
 		return _Residents.Count < MAX_RESIDENT;
 	}
 
-	public void AddResident(Mukya mukya)
+	public bool AddResident(Mukya mukya)
 	{
-		mukya.None();
-		_Residents.Add(mukya);
+		if (_Residents.Count < MAX_RESIDENT)
+		{
+			mukya.None();
+			_Residents.Add(mukya);
+
+			return true;
+		}
+
+		return false;
 	}
 
 	public bool RemoveResident(int index)
