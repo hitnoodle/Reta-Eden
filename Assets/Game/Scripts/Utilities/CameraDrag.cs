@@ -90,6 +90,9 @@ public class CameraDrag : MonoBehaviour
 					{
 						if (Time.time - _TouchBeganTime > _TouchDragTime)
 						{
+							_TouchOrigin = Input.mousePosition;
+							_LastDragPosition = _TouchOrigin;
+
 							_IsDragging = true;
 							_UnderInertia = false;
 						}

@@ -183,6 +183,13 @@ public class HUD : MonoBehaviour
 
 	public void PauseMenu()
 	{
+		StartCoroutine(DisplayPauseMenu());
+	}
+
+	IEnumerator DisplayPauseMenu()
+	{
+		yield return new WaitForSeconds(0.1f);
+
 		HUD.ShowPauseMenu();
 	}
 

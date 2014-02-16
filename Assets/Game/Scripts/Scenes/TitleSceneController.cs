@@ -8,13 +8,16 @@ public class TitleSceneController : MonoBehaviour
 	// Use this for initialization
 	void Start() 
 	{
-		StartCoroutine(GoToMain());
+		StartCoroutine(NextScene());
 	}
 
-	IEnumerator GoToMain()
+	IEnumerator NextScene()
 	{
 		yield return new WaitForSeconds(WaitDuration);
 
-		Application.LoadLevel("MainScene");
+		if (ProfileManager.Instance.TutorialPlayed)
+			Application.LoadLevel("MainScene");
+		else 
+			Application.LoadLevel("TutorialScene");
 	}
 }
