@@ -62,7 +62,7 @@ MonoBehaviour:
   atlasWidth: 2048
   atlasHeight: 2048
   forceSquareAtlas: 0
-  atlasWastage: 39.5883789
+  atlasWastage: 40.7870064
   allowMultipleAtlases: 0
   removeDuplicates: 1
   textureParams:
@@ -72,7 +72,7 @@ MonoBehaviour:
     scale: {x: 1, y: 1, z: 1}
     texture: {fileID: 2800000, guid: 8a519261115594e10b29a37179ba0a58, type: 3}
     materialId: 0
-    anchor: 4
+    anchor: 6
     anchorX: 0
     anchorY: 0
     overrideMesh: {fileID: 0}
@@ -312,7 +312,7 @@ MonoBehaviour:
     scale: {x: 1, y: 1, z: 1}
     texture: {fileID: 2800000, guid: ea7305548c226473dbf65b182f8ec59e, type: 3}
     materialId: 0
-    anchor: 4
+    anchor: 6
     anchorX: 0
     anchorY: 0
     overrideMesh: {fileID: 0}
@@ -1152,7 +1152,7 @@ MonoBehaviour:
     scale: {x: 1, y: 1, z: 1}
     texture: {fileID: 2800000, guid: 3b4a291b6d3e946cfaff5a740bf4b4fb, type: 3}
     materialId: 0
-    anchor: 4
+    anchor: 8
     anchorX: 0
     anchorY: 0
     overrideMesh: {fileID: 0}
@@ -1352,7 +1352,7 @@ MonoBehaviour:
     scale: {x: 1, y: 1, z: 1}
     texture: {fileID: 2800000, guid: 6592d79c229774967b33c03187b59fb6, type: 3}
     materialId: 0
-    anchor: 4
+    anchor: 8
     anchorX: 0
     anchorY: 0
     overrideMesh: {fileID: 0}

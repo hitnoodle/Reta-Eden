@@ -11,14 +11,25 @@ public class MainSceneController : MonoBehaviour
 	public const int MIN_DIAMOND_SPAWNER_TIME = 3;
 	public const int MAX_DIAMOND_SPAWNER_TIME = 12;
 
+	public const int MAX_MUKYA_PER_LEVEL = 2;
+
 	private static MainSceneController s_Instance;
+
+	//World information
+	private World _World;
 
 	//Building information
 	public List<Building> Buildings;
+	public Building BuildingNone;
+	public Building BuildingCityHall;
+
+	public Transform BuildingsTransform;
 
 	//Mukyas information
 	private List<Mukya> Mukyas;
-	private Mukya _SelectedMukya = null;
+	private Mukya _SelectedMukya;
+
+	private Transform _MukyasTransform;
 
 	//Diamond information
 	private List<Diamond> Diamonds;
@@ -47,6 +58,11 @@ public class MainSceneController : MonoBehaviour
 	// Ongoing Mukya to its building
 	private Hashtable _OngoingResidents;
 
+	private Vector2 _TouchOrigin;
+	private float _TouchTime;
+	private bool _IsTouched = false;
+	private bool _IsTouchedMove = false;
+
 	// Use this for initialization
 	void Awake() 
 	{
@@ -69,59 +85,46 @@ public class MainSceneController : MonoBehaviour
 		CreateScene();
 
 		//Default value
-		Money = 100000;
-		for(int i=0;i<DIAMOND_TYPES;i++) SetDiamond(i, 9);
+		Money = ProfileManager.Instance.Money;
+		for(int i=0;i<DIAMOND_TYPES;i++) 
+			SetDiamond(i, ProfileManager.Instance.Diamonds[i]);
 
 		//Spawn diamonds
 		StartCoroutine(SpawnDiamonds());
+
+		//Background music
+		StartCoroutine(StartBackgroundMusic());
 	}
 
 	void CreateScene()
 	{
 		//Create world
 		GameObject worldObject = Utilities.CreateGameObject("World");
-		World world = worldObject.AddComponent<World>();
+		_World = worldObject.AddComponent<World>();
 
 		//Randomize season
 		int season = Random.Range(0, 3);
-		world.Season = (WorldSeason)season;
+		_World.Season = (WorldSeason)season;
 		
 		//Load world data
-		world.Size = 3;
+		_World.Size = ProfileManager.Instance.WorldSize;
 
 		//Set camera drag
-		CameraDrag drag = GetComponent<CameraDrag>();
-		if (drag != null) 
-		{
-			float offset = (float)Screen.width * 768f / (float)Screen.height;
-			drag.MaxX = world.Width - offset;
-		}
+		float offset = (float)Screen.width * 768f / (float)Screen.height;
+		_CameraDrag.MaxX = _World.Width - offset;
 
 		//Create mukyas
 		GameObject mukyasObject = Utilities.CreateGameObject("Mukyas", new Vector3(0, Mukya.START_Y, -2), null);
-		Transform mukyasTransform = mukyasObject.transform;
+		_MukyasTransform = mukyasObject.transform;
 
 		Mukya.START_X = 25f;
-		Mukya.END_X = world.Width - 25f;
+		Mukya.END_X = _World.Width - 25f;
 
 		//Load mukyas data
 		foreach(Mukya.MukyaRace race in System.Enum.GetValues(typeof(Mukya.MukyaRace)))
 		{
-			if (race != Mukya.MukyaRace.None)
-			{
-				string raceString = race.ToString();
-				GameObject mukyaObject = (GameObject)Instantiate(Resources.Load("Prefabs/Mukya_" + raceString));
-
-				Mukya mukya = mukyaObject.GetComponent<Mukya>();
-				Mukyas.Add(mukya);
-
-				Transform mukyaTransform = mukyaObject.transform;
-				mukyaTransform.name = "Mukya" + mukya._Race.ToString();
-				mukyaTransform.parent = mukyasTransform;
-				
-				float x = Random.Range(Mukya.START_X, Mukya.END_X);
-				mukyaTransform.localPosition = new Vector3(x, 0, 0);
-			}
+			float x = Random.Range(Mukya.START_X, Mukya.END_X);
+			MainSceneController.AddNewMukya(race, x);
 		}
 
 		//CreateDiamonds
@@ -159,6 +162,48 @@ public class MainSceneController : MonoBehaviour
 			Diamonds[k] = Diamonds[n];  
 			Diamonds[n] = value;  
 		}  
+	}
+
+	IEnumerator StartBackgroundMusic()
+	{
+		yield return new WaitForSeconds(0.1f);
+
+		if (_World.Season == WorldSeason.Candy)
+		{
+			SoundManager.BackgroundMusicVolume = 0.5f;
+			SoundManager.PlayBackgroundMusic("baby_on_board", true);
+		}
+		else if (_World.Season == WorldSeason.Ice)
+		{
+			SoundManager.BackgroundMusicVolume = 0.5f;
+			SoundManager.PlayBackgroundMusic("hometown", true);
+		}
+		else if (_World.Season == WorldSeason.Green)
+		{
+			SoundManager.BackgroundMusicVolume = 0.4f;
+			SoundManager.PlayBackgroundMusic("finish_line", true);
+		}
+	}
+
+	IEnumerator ResetGameCoroutine()
+	{
+		yield return new WaitForSeconds(0.15f);
+		
+		Application.LoadLevel("TitleScene");
+	}
+
+	IEnumerator RemoveMukyaCoroutine(Mukya mukya)
+	{
+		yield return new WaitForSeconds(0.1f);
+
+		if (mukya == _SelectedMukya) 
+		{
+			_SelectedMukya = null;
+			HUD.HideMukyaInformation();
+		}
+
+		Mukyas.Remove(mukya);
+		DestroyObject(mukya.gameObject);
 	}
 
 	IEnumerator SpawnDiamonds()
@@ -211,6 +256,8 @@ public class MainSceneController : MonoBehaviour
 			d.OnSpawnDone += UnSpawnDiamond;
 
 			DiamondsActive.Add(d);
+
+			SoundManager.PlaySoundEffectOneShot("crystal_spawned");
 		}
 	}
 
@@ -230,8 +277,72 @@ public class MainSceneController : MonoBehaviour
 		//Pause
 		if (Utilities.IS_PAUSED) return;
 
+		/*
+		if (_SelectedMukya != null)
+		{
+			Debug.Log(_SelectedMukya.Position() 
+			          + " " + _SelectedMukya._Race.ToString()
+			          + " " + _SelectedMukya.Destination());
+		}
+		*/
+
+		bool checkInput = false;
+
+		if (Input.touchCount > 0)
+		{
+			foreach(Touch t in Input.touches)
+			{
+				if (!_IsTouched)
+				{
+					if (t.phase == TouchPhase.Began)
+					{
+						_TouchOrigin = t.position;
+						_TouchTime = 0f;
+					}
+					else if (t.phase == TouchPhase.Stationary)
+					{
+						if (!_IsTouchedMove)
+						{
+							_TouchTime += Time.deltaTime;
+							if (_TouchTime >= 0.1f)
+							{
+								_IsTouched = true;
+								checkInput = true;
+								break;
+							}
+						}
+					}
+					else if (t.phase == TouchPhase.Moved)
+					{
+						if (!_IsTouchedMove && Vector2.Distance(_TouchOrigin, t.position) > 10f)
+							_IsTouchedMove = true;
+					}
+					else if (t.phase == TouchPhase.Ended)
+					{
+						if (!_IsTouchedMove)
+							checkInput = true;
+
+						_IsTouched = false;
+						_IsTouchedMove = false;
+					}
+				}
+				else
+				{
+					if (t.phase == TouchPhase.Ended)
+					{
+						_IsTouched = false;
+						_IsTouchedMove = false;
+					}
+				}
+			}
+		}
+		else
+		{
+			checkInput = Input.GetMouseButtonUp(0) && !_CameraDrag.IsMoving();
+		}
+
 		//When released
-		if (Input.GetMouseButtonUp(0) && !_CameraDrag.IsMoving())
+		if (checkInput)
 		{
 			//Translate to screen space
 			Vector3 pos = _Camera.ScreenToWorldPoint(Input.mousePosition);
@@ -243,6 +354,8 @@ public class MainSceneController : MonoBehaviour
 				int index = (int)touchedDiamond._Type;
 				SetDiamond(index, _Diamonds[index] + 1);
 				UnSpawnDiamond(touchedDiamond);
+
+				SoundManager.PlaySoundEffectOneShot("touched_crystal");
 
 				return;
 			}
@@ -263,8 +376,8 @@ public class MainSceneController : MonoBehaviour
 						//Only if it's these buildings of course
 						if (touchedBuilding._Type == Building.BuildingType.Bar ||
 						    touchedBuilding._Type == Building.BuildingType.House ||
-						    touchedBuilding._Type == Building.BuildingType.OuterWorld ||
-						    touchedBuilding._Type == Building.BuildingType.Shop)
+						    touchedBuilding._Type == Building.BuildingType.Shop ||
+						    touchedBuilding._Type == Building.BuildingType.OuterWorld)
 						{
 							//Cancel if already moving
 							if (_OngoingResidents.ContainsKey(_SelectedMukya))
@@ -272,11 +385,24 @@ public class MainSceneController : MonoBehaviour
 								_SelectedMukya.OnMoveDone -= AddOngoingResident;
 								_OngoingResidents.Remove(_SelectedMukya);
 							}
-							
-							_SelectedMukya.Move(touchedBuilding.Position());
-							_SelectedMukya.OnMoveDone += AddOngoingResident;
-							
-							_OngoingResidents.Add(_SelectedMukya, touchedBuilding);
+
+							bool moving = _SelectedMukya.Move(touchedBuilding.Position());
+							if (moving)
+							{
+								_SelectedMukya.StopAllCoroutines();
+								_SelectedMukya.OnMoveDone += AddOngoingResident;
+								
+								_OngoingResidents.Add(_SelectedMukya, touchedBuilding);
+
+								/*
+								Debug.Log(_SelectedMukya.Position() 
+								          + " " + _SelectedMukya._Race.ToString()
+								          + " " + touchedBuilding.Position()
+								          + " " + touchedBuilding._Type.ToString());
+								*/
+
+								SoundManager.PlaySoundEffectOneShot("meow2");
+							}
 						}
 						else
 						{
@@ -296,7 +422,11 @@ public class MainSceneController : MonoBehaviour
 			_SelectedMukya = touchedMukya;
 
 			if (_SelectedMukya != null)
+			{
 				HUD.ShowMukyaInformation(_SelectedMukya);
+
+				SoundManager.PlaySoundEffectOneShot("meow");
+			}
 			else
 				HUD.HideMukyaInformation();
 		}
@@ -337,13 +467,13 @@ public class MainSceneController : MonoBehaviour
 
 	private void AddOngoingResident(Mukya mukya)
 	{
+		mukya.OnMoveDone -= AddOngoingResident;
+
 		if (mukya == _SelectedMukya)
 		{
 			_SelectedMukya = null;
 			HUD.HideMukyaInformation();
 		}
-			
-		mukya.OnMoveDone -= AddOngoingResident;
 
 		Building building = (Building)_OngoingResidents[mukya];
 
@@ -402,11 +532,102 @@ public class MainSceneController : MonoBehaviour
 		s_Instance.Money = oldMoney;
 	}
 
-	public static void DecreaseMoney(int money)
+	public static bool AddNewMukya(Mukya.MukyaRace race)
+	{
+		if (s_Instance == null) return false;
+
+		return AddNewMukya(race, s_Instance.BuildingCityHall.Position());
+	}
+
+	public static bool AddNewMukya(Mukya.MukyaRace race, float position)
+	{
+		if (s_Instance == null) return false;
+		//if (s_Instance.Mukyas.Count >= (s_Instance._World.Width * MAX_MUKYA_PER_LEVEL)) return false;
+
+		string raceString = race.ToString();
+		GameObject mukyaObject = (GameObject)Instantiate(Resources.Load("Prefabs/Mukya_" + raceString));
+		
+		Mukya mukya = mukyaObject.GetComponent<Mukya>();
+		s_Instance.Mukyas.Add(mukya);
+		
+		Transform mukyaTransform = mukyaObject.transform;
+		mukyaTransform.name = "Mukya" + mukya._Race.ToString();
+		mukyaTransform.parent = s_Instance._MukyasTransform;
+		
+		mukyaTransform.localPosition = new Vector3(position, 0, 0);
+
+		return true;
+	}
+
+	public static void RemoveMukya(Mukya mukya)
+	{
+		if (s_Instance == null) return;
+	
+		if (mukya == null) 
+			return;
+		else
+			s_Instance.StartCoroutine(s_Instance.RemoveMukyaCoroutine(mukya));
+	}
+
+	public static bool RemoveGhost()
+	{
+		if (s_Instance == null) return false;
+
+		foreach(Mukya mukya in s_Instance.Mukyas)
+		{
+			if (mukya._Race == Mukya.MukyaRace.Ghost)
+			{
+				s_Instance.StartCoroutine(s_Instance.RemoveMukyaCoroutine(mukya));
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public static bool SpendMoney(int money)
+	{
+		if (s_Instance == null) return false;
+
+		int oldMoney = s_Instance.Money - money;
+		if (oldMoney < 0) return false;
+
+		s_Instance.Money = oldMoney;
+
+		return true;
+	}
+
+	public static void BuildNewBuilding(Building.BuildingType type)
+	{
+		if (s_Instance == null) return;
+		if (type == Building.BuildingType.None) return;
+
+		s_Instance._World.IncreaseWorldSize();
+
+		GameObject buildingObject = (GameObject)Instantiate(Resources.Load("Prefabs/Building_" + type.ToString()));
+		buildingObject.name = "Building" + type.ToString();
+
+		Transform buildingTransform = buildingObject.transform;
+		buildingTransform.parent = s_Instance.BuildingsTransform;
+		buildingTransform.localPosition = new Vector3(s_Instance.BuildingNone.Position(), 0, 0);
+
+		Building building = buildingObject.GetComponent<Building>();
+		s_Instance.Buildings.Add(building);
+
+		s_Instance.BuildingNone.MovePosition(World.TILE_WIDTH * World.TILE_PER_ADDITION);
+
+		//Update camera drag
+		float offset = (float)Screen.width * 768f / (float)Screen.height;
+		s_Instance._CameraDrag.MaxX = s_Instance._World.Width - offset;
+
+		//Update mukya end
+		Mukya.END_X = s_Instance._World.Width - 25f;
+	}
+
+	public static void ResetGame()
 	{
 		if (s_Instance == null) return;
 
-		int oldMoney = s_Instance.Money - money;
-		s_Instance.Money = oldMoney;
+		s_Instance.StartCoroutine(s_Instance.ResetGameCoroutine());
 	}
 }

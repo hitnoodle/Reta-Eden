@@ -10,30 +10,29 @@ public enum WorldSeason
 
 public class World : MonoBehaviour 
 {
-	private const int TILE_WIDTH = 70;
+	public const int TILE_WIDTH = 70;
+	public const int TILE_PER_ADDITION = 7;
 
 	public WorldSeason Season = WorldSeason.Green;
 	public int Size = 1;
-	public int InitialTiles = 20;
-	public int TilePerAddition = 10;
+	public int InitialTiles = 29;
 
 	public int Width
 	{
-		get 
-		{
-			return (20 + ((Size - 1) * TilePerAddition)) * TILE_WIDTH;
-		}
+		get { return (InitialTiles + ((Size - 1) * TILE_PER_ADDITION)) * TILE_WIDTH; }
 	}
-
+	
 	private Transform _Transform;
 
-	// Use this for initialization
+	private Transform _BackgroundsTransform;
+	private tk2dSprite[] _Backgrounds;
+
+	private Transform _FloorsTransform;
+
 	void Start() 
 	{
-		//Cache transform
 		_Transform = transform;
 
-		//Create current world
 		CreateWorld();
 	}
 
@@ -45,11 +44,15 @@ public class World : MonoBehaviour
 		//Create Background
 		GameObject backgroundsObject = (GameObject)Instantiate(Resources.Load("Prefabs/Backgrounds_" + season));
 		backgroundsObject.name = "Backgrounds";
-		backgroundsObject.transform.parent = _Transform;
+
+		_BackgroundsTransform = backgroundsObject.transform;
+		_BackgroundsTransform.parent = _Transform;
+
+		_Backgrounds = backgroundsObject.GetComponentsInChildren<tk2dSprite>();
 
 		//Create Floors
 		GameObject floorsObject = Utilities.CreateGameObject("Floors", Vector3.zero, _Transform);
-		Transform floorsTransform = floorsObject.transform;
+		_FloorsTransform = floorsObject.transform;
 
 		//Initial tiles
 		for (int i=0;i<InitialTiles;i++)
@@ -58,45 +61,60 @@ public class World : MonoBehaviour
 			tilesObject.name = "FloorTiles";
 
 			Transform tilesTransform = tilesObject.transform;
-			tilesTransform.parent = floorsTransform;
+			tilesTransform.parent = _FloorsTransform;
 			tilesTransform.position = new Vector3(0 + (i * TILE_WIDTH), 0, 0);
 		}
 
 		if (Size > 1)
+			CreateAdditions(Size - 1);
+	}
+
+	void CreateAdditions(int addSize)
+	{
+		int startX = (InitialTiles * TILE_WIDTH) + ((Size - 1) * TILE_PER_ADDITION * TILE_WIDTH);
+		int addition = addSize * TILE_PER_ADDITION;
+
+		//Season 
+		string season = Season.ToString();
+
+		//Add more tiles
+		for (int i=0;i<addition;i++)
 		{
-			int addition = (Size - 1) * TilePerAddition;
-			int startX = InitialTiles * TILE_WIDTH;
-			for (int i=0;i<addition;i++)
+			GameObject tilesObject = (GameObject)Instantiate(Resources.Load("Prefabs/FloorTiles_" + season));
+			tilesObject.name = "FloorTiles";
+			
+			Transform tilesTransform = tilesObject.transform;
+			tilesTransform.parent = _FloorsTransform;
+			tilesTransform.position = new Vector3(startX + (i * TILE_WIDTH), 0, 0);
+		}
+
+		Size += addSize;
+
+		//Create more background if needed
+		int more_background = (int)Mathf.Ceil(((float)Width - 2048f) / 1024f);
+		if (more_background > 0)
+		{
+			for(int i=0;i<more_background;i++)
 			{
-				GameObject tilesObject = (GameObject)Instantiate(Resources.Load("Prefabs/FloorTiles_" + season));
-				tilesObject.name = "FloorTiles";
+				GameObject newBg;
 				
-				Transform tilesTransform = tilesObject.transform;
-				tilesTransform.parent = floorsTransform;
-				tilesTransform.position = new Vector3(startX + (i * TILE_WIDTH), 0, 0);
-			}
-
-			//Create more background if needed
-			int more_background = (int)Mathf.Ceil(((float)Width - 2048f) / 1024f);
-			if (more_background > 0)
-			{
-				tk2dSprite[] backgrounds = backgroundsObject.GetComponentsInChildren<tk2dSprite>();
-				for(int i=0;i<more_background;i++)
-				{
-					GameObject newBg;
-
-					if (i%2==0)
-						newBg = (GameObject)Instantiate(backgrounds[0].gameObject);
-					else
-						newBg = (GameObject)Instantiate(backgrounds[1].gameObject);
-
-					newBg.name = "Background" + (3 + i);
-
-					Transform newBgTransform = newBg.transform;
-					newBgTransform.parent = backgroundsObject.transform;
-					newBgTransform.position = new Vector3(2048 + (i * 1024), 768, 1);
-				}
+				if (i%2==0)
+					newBg = (GameObject)Instantiate(_Backgrounds[0].gameObject);
+				else
+					newBg = (GameObject)Instantiate(_Backgrounds[1].gameObject);
+				
+				newBg.name = "Background" + (3 + i);
+				
+				Transform newBgTransform = newBg.transform;
+				newBgTransform.parent = _BackgroundsTransform;
+				newBgTransform.position = new Vector3(2048 + (i * 1024), 768, 1);
 			}
 		}
+	}
+
+	public void IncreaseWorldSize()
+	{
+		CreateAdditions(1);
+		ProfileManager.Instance.WorldSize += 1;
 	}
 }

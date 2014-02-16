@@ -249,17 +249,17 @@ MonoBehaviour:
     attachPoints: []
   - name: ghost_normal
     boundsData:
-    - {x: .5, y: 36.5, z: 0}
+    - {x: -.5, y: 46.5, z: 0}
     - {x: 51, y: 73, z: 0}
     untrimmedBoundsData:
-    - {x: .5, y: 36.5, z: 0}
-    - {x: 51, y: 73, z: 0}
+    - {x: 0, y: 46.5, z: 0}
+    - {x: 68, y: 93, z: 0}
     texelSize: {x: 1, y: 1}
     positions:
-    - {x: -25, y: 0, z: 0}
-    - {x: 26, y: 0, z: 0}
-    - {x: -25, y: 73, z: 0}
-    - {x: 26, y: 73, z: 0}
+    - {x: -26, y: 10, z: 0}
+    - {x: 25, y: 10, z: 0}
+    - {x: -26, y: 83, z: 0}
+    - {x: 25, y: 83, z: 0}
     normals: []
     tangents: []
     uvs:
@@ -700,17 +700,17 @@ MonoBehaviour:
     attachPoints: []
   - name: ghost
     boundsData:
-    - {x: .5, y: 36.5, z: 0}
+    - {x: -.5, y: 46.5, z: 0}
     - {x: 51, y: 73, z: 0}
     untrimmedBoundsData:
-    - {x: .5, y: 36.5, z: 0}
-    - {x: 51, y: 73, z: 0}
+    - {x: 0, y: 46.5, z: 0}
+    - {x: 68, y: 93, z: 0}
     texelSize: {x: 1, y: 1}
     positions:
-    - {x: -25, y: 0, z: 0}
-    - {x: 26, y: 0, z: 0}
-    - {x: -25, y: 73, z: 0}
-    - {x: 26, y: 73, z: 0}
+    - {x: -26, y: 10, z: 0}
+    - {x: 25, y: 10, z: 0}
+    - {x: -26, y: 83, z: 0}
+    - {x: 25, y: 83, z: 0}
     normals: []
     tangents: []
     uvs:
@@ -756,7 +756,7 @@ MonoBehaviour:
   loadable: 0
   invOrthoSize: 2
   halfTargetHeight: .5
-  buildKey: 1068585821
+  buildKey: 390310801
   dataGuid: e6a981605630d4386a7cfbee8c05b915
   managedSpriteCollection: 0
   hasPlatformData: 0

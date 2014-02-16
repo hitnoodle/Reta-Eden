@@ -20,6 +20,9 @@ public class Mukya : MonoBehaviour
 	private const float PENALTY_THRESHOLD = 10f; //Percentage where multiplier active
 	private const float DECREASE_MULTIPLIER = 1.5f; //Multiply decrease status
 
+	public const int MUKYA_PRICE = 1000;
+	public const int PRICE_INFLATION = 2500;
+
 	#endregion
 
 	#region Shared Mukya Attributes
@@ -29,35 +32,18 @@ public class Mukya : MonoBehaviour
 
 	#endregion
 
-	#region State Handling
-
-	private enum MukyaState
-	{
-		None,	//Don't do shit (ex: at building)
-		Moving,	//Moving to certain destination
-	}
-	private MukyaState _CurrentState = MukyaState.None;
-
-	public delegate void _OnMoveDone(Mukya mukya);
-	public _OnMoveDone OnMoveDone;
-
-	private float _Speed;
-	private float _MoveDestination;
-
-	#endregion
-
 	#region Unique Attributes and Status
 
 	public enum MukyaRace
 	{
-		None,
+		Ghost,
 		Beige,
 		Blue,
 		Green,
 		Pink,
 		Yellow
 	}
-	public MukyaRace _Race = MukyaRace.None;
+	public MukyaRace _Race = MukyaRace.Ghost;
 
 	public float _EnergyStatus = MAX_STATUS;
 	public float _SocialStatus = MAX_STATUS;
@@ -71,8 +57,17 @@ public class Mukya : MonoBehaviour
 	private BoxCollider2D _Collider;
 	private Transform _Transform;
 
+	private bool _IsMoving;
+	private float _Speed;
+	private float _MoveDestination;
+	
+	public delegate void _OnMoveDone(Mukya mukya);
+	public _OnMoveDone OnMoveDone;
+
 	private bool _Penalty;
 	private float[] _StatusDecrease;
+
+	private bool _IsDead;
 
 	#region Mono Behavior
 
@@ -84,13 +79,106 @@ public class Mukya : MonoBehaviour
 		_Collider = GetComponent<BoxCollider2D>();
 		_Transform = transform;
 
+		_IsMoving = false;
+		_Speed = 0f;
+
 		_Penalty = false;
 		_StatusDecrease = new float[3];
 		for(int i=0;i<_StatusDecrease.Length;i++)
 			_StatusDecrease[i] = Random.Range(STATUS_DECREASE_MIN, STATUS_DECREASE_MAX);
+
+		_IsDead = false;
 	}
 
 	void Start()
+	{
+		MoveAround();
+	}
+	
+	// Update is called once per frame
+	void Update() 
+	{
+		//Pause
+		if (Utilities.IS_PAUSED) 
+		{
+			//Pause animation if needed
+			if (!_Animator.Paused) _Animator.Pause();
+
+			return;
+		}
+
+		//Resume animation if needed
+		if (_Animator.Paused) _Animator.Resume();
+
+		//Always decrease status
+		if (_Race != MukyaRace.Ghost) DecreaseStatus(Time.deltaTime);
+
+		//Move, baby
+		if (_IsMoving)
+		{
+			Vector3 currentPos = _Transform.position;
+			_Transform.position = new Vector3(currentPos.x + (_Speed * Time.deltaTime), currentPos.y, currentPos.z);
+
+			bool doneMove = false;
+			if (!_Sprite.FlipX)
+			{
+				if (currentPos.x >= _MoveDestination) doneMove = true;
+			}
+			else
+			{
+				if (currentPos.x <= _MoveDestination) doneMove = true;
+			}
+
+			if (doneMove)
+			{
+				_IsMoving = false;
+				_Transform.position = new Vector3(_MoveDestination, currentPos.y, currentPos.z);
+				
+				if (OnMoveDone != null)
+					OnMoveDone(this);
+			}
+		}
+	}
+
+	#endregion
+
+
+	public bool IsContainingPosition(Vector2 pos)
+	{
+		if (!_Collider.enabled) return false;
+		if (_Race == MukyaRace.Ghost) return false;
+
+		return _Collider == Physics2D.OverlapPoint(pos);
+	}
+
+	public float Position()
+	{
+		return _Transform.position.x;
+	}
+
+	public void SetPosition(float pos)
+	{
+		Vector3 oldPos =_Transform.position;
+		_Transform.position = new Vector3(pos, oldPos.y, oldPos.z);
+	}
+
+	public float Destination()
+	{
+		return _MoveDestination;
+	}
+
+	#region State functions
+
+	IEnumerator Wait()
+	{
+		int wait = Random.Range(1,4);
+	
+		yield return new WaitForSeconds(wait);
+
+		MoveAround();
+	}
+
+	void MoveAround()
 	{
 		float destination = Random.Range(START_X, END_X);
 		while (Mathf.Abs(_Transform.position.x - destination) < MIN_MOVE)
@@ -100,61 +188,19 @@ public class Mukya : MonoBehaviour
 		OnMoveDone += Idle;
 	}
 	
-	// Update is called once per frame
-	void Update() 
+	public void Idle(Mukya mukya)
 	{
-		//Pause
-		if (Utilities.IS_PAUSED) 
-		{
-			if (!_Animator.Paused) _Animator.Pause();
-			return;
-		}
+		OnMoveDone -= Idle;
 
-		if (_Animator.Paused) _Animator.Resume();
+		_Animator.Play("idle");
 
-		//Always decrease status
-		DecreaseStatus(Time.deltaTime);
-
-		//Lazy state handling
-		if (_CurrentState == MukyaState.Moving)
-		{
-			Vector3 currentPos = _Transform.position;
-			currentPos.x += _Speed * Time.deltaTime;
-
-			_Transform.position = new Vector3(currentPos.x, currentPos.y, currentPos.z);
-			if ((_Sprite.FlipX && currentPos.x <= _MoveDestination) 
-			    || (!_Sprite.FlipX && currentPos.x >= _MoveDestination))
-			{
-				_Transform.position = new Vector3(_MoveDestination, currentPos.y, currentPos.z);
-
-				if (OnMoveDone != null)
-					OnMoveDone(this);
-			}
-		}
+		StartCoroutine(Wait());
 	}
-
-	#endregion
-
-	#region Collisions
-
-	public bool IsContainingPosition(Vector2 pos)
-	{
-		if (!_Collider.enabled) return false;
-
-		return _Collider == Physics2D.OverlapPoint(pos);
-	}
-
-	#endregion
-
-	#region State functions
 
 	public void None()
 	{
-		_Animator.Play("idle");
 		_Sprite.renderer.enabled = false;
 		_Collider.enabled = false;
-
-		_CurrentState = MukyaState.None;
 	}
 
 	public void UnNone()
@@ -162,56 +208,24 @@ public class Mukya : MonoBehaviour
 		_Sprite.renderer.enabled = true;
 		_Collider.enabled = true;
 
+		_IsMoving = false;
 		Idle(this);
-	}
-
-	public void Idle(Mukya mukya)
-	{
-		OnMoveDone -= Idle;
-
-		StopAllCoroutines();
-		StartCoroutine(MoveAround());
-
-		_Animator.Play("idle");
-	}
-
-	IEnumerator MoveAround()
-	{
-		int wait = Random.Range(1,4);
-
-		yield return new WaitForSeconds(wait);
-
-		float destination = Random.Range(START_X, END_X);
-		while (Mathf.Abs(_Transform.position.x - destination) < MIN_MOVE)
-			destination = Random.Range(START_X, END_X);
-
-		Move(destination);
-		OnMoveDone += Idle;
 	}
 
 	public bool Move(float destination)
 	{
-		//Wth
-		OnMoveDone -= Idle;
-
 		//Outside screen
-		if (destination < START_X || destination > END_X)
-			return false;
+		if (destination < START_X || destination > END_X) return false;
 
-		Vector3 currentPos = _Transform.position;
-		_Sprite.FlipX = false;
+		//Face left if the destination is on the left, duh
+		_Sprite.FlipX = (Position() > destination);
 
-		//Need flip?
-		if (currentPos.x > destination)
-			_Sprite.FlipX = true;
-
-		//Set speed
+		//Set speed and where to go
 		_Speed = Random.Range(MIN_SPEED, MAX_SPEED);
-		if (_Sprite.FlipX) 
-			_Speed *= -1;
+		if (_Sprite.FlipX) _Speed *= -1;
 
 		//Move
-		_CurrentState = MukyaState.Moving;
+		_IsMoving = true;
 		_MoveDestination = destination;
 		_Animator.Play("walk");
 
@@ -246,9 +260,19 @@ public class Mukya : MonoBehaviour
 			else
 			{
 				//Dead.. fucking dead
-				if (_EnergyStatus == 0 && _SocialStatus == 0 && _WorkStatus == 0)
+				if (!_IsDead)
 				{
-					//Destroy(this.gameObject);
+					if (_EnergyStatus == 0 && _SocialStatus == 0 && _WorkStatus == 0)
+					{
+						gameObject.SetActive(false);
+
+						MainSceneController.AddNewMukya(MukyaRace.Ghost, Position());
+						MainSceneController.RemoveMukya(this);
+						
+						SoundManager.PlaySoundEffectOneShot("meow2");
+						
+						_IsDead = true;
+					}
 				}
 			}
 		}

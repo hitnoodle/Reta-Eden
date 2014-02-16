@@ -67,7 +67,7 @@ MonoBehaviour:
       eventInfo: 
       eventInt: 0
       eventFloat: 0
-    fps: 6
+    fps: 2
     loopStart: 0
     wrapMode: 0
 --- !u!1001 &100100000

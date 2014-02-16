@@ -52,6 +52,18 @@ public class HUD : MonoBehaviour
 	public tk2dTextMesh[] ResidentEmptyStatus;
 	public tk2dUIItem[] ResidentOutButtons;
 
+	public GameObject BuildingMenu = null;
+	public GameObject[] BuildMenuPages;
+	public tk2dUIItem ArrowRight = null;
+	public tk2dUIItem ArrowLeft = null;
+	public tk2dUIItem BuildButton = null;
+	public tk2dTextMesh BuildPrice = null;
+
+	public GameObject PauseCreditText = null;
+	public tk2dUIItem PauseResumeButton = null;
+	public tk2dUIItem PauseResetButton = null;
+	public tk2dTextMesh PauseCounter = null;
+
 	#endregion
 
 	private Camera _Camera = null;
@@ -61,6 +73,12 @@ public class HUD : MonoBehaviour
 	private Building _CurrentBuilding = null;
 
 	private bool _CanIdleClick = true;
+
+	private int _BuildMenuPage;
+	private BoxCollider[] _BuildMenuBoundaries;
+
+	private int _ResetCounter;
+	private bool[] _ResetClicked;
 
 	#region Mono Behavior
 
@@ -76,18 +94,50 @@ public class HUD : MonoBehaviour
 
 	void Update()
 	{
-		if (_State != UIState.Idle)
+		if (_State != UIState.Idle && _State != UIState.PauseMenu)
 		{
 			//Handling back to Idle code
-			if (Input.GetMouseButtonUp(0))
+			bool checkInput = false;
+			if (Input.touchCount > 0)
+			{
+				foreach(Touch t in Input.touches)
+				{
+					if (t.phase == TouchPhase.Began)
+					{
+						checkInput = true;
+						break;
+					}
+				}
+			}
+			else
+			{
+				checkInput = Input.GetMouseButtonUp(0);
+			}
+
+			if (checkInput)
 			{
 				//Translate to screen space
 				Vector3 pos = _Camera.ScreenToWorldPoint(Input.mousePosition);
 				Vector2 pos2D = new Vector2(pos.x, pos.y);
 
+				//Special check on building
+				if (_State == UIState.BuildMenu)
+				{
+					Ray ray = _Camera.ScreenPointToRay(Input.mousePosition);
+					RaycastHit hit;
+					foreach(BoxCollider collider in _BuildMenuBoundaries)
+						if (collider.Raycast(ray, out hit, Mathf.Infinity))
+							return;
+				}
+
 				//Not on touch boundary
 				if (_ClickBoundary != Physics2D.OverlapPoint(pos2D))
+				{
 					ExitState();
+
+					SoundManager.PlaySoundEffectOneShot("button_back");
+				}
+					
 			}
 
 			if (_State == UIState.ResidentsMenu)
@@ -163,7 +213,10 @@ public class HUD : MonoBehaviour
 
 	private void Share()
 	{
-
+		/*
+		StartCoroutine(Done());
+		SoundManager.PlaySoundEffectOneShot("button_confirm_again");
+		*/
 	}
 
 	private void ExitCommunicationMenu()
@@ -190,15 +243,40 @@ public class HUD : MonoBehaviour
 		ExchangeCrystalButton.OnClick += ExchangeCrystal;
 	}
 
+	private int CalculateResidentPrice()
+	{
+		int price = Mukya.MUKYA_PRICE + (Mukya.PRICE_INFLATION * ProfileManager.Instance.WorldSize);
+		return price;
+	}
+
 	private void RequestResident()
 	{
+		int price = CalculateResidentPrice();
+		bool bought = MainSceneController.SpendMoney(price);
+		
+		if (bought)
+		{
+			MainSceneController.RemoveGhost();
 
+			int race = Random.Range(0, 4) + 1;
+			MainSceneController.AddNewMukya((Mukya.MukyaRace)race);
+			
+			StartCoroutine(Done());
+			
+			SoundManager.PlaySoundEffectOneShot("building_now");
+		}
+		else
+		{
+			SoundManager.PlaySoundEffectOneShot("button_error");
+		}
 	}
 
 	private void ExchangeCrystal()
 	{
 		MainSceneController.ExchangeMoneyWithCrystal();
 		StartCoroutine(Done());
+
+		SoundManager.PlaySoundEffectOneShot("building_now");
 	}
 	
 	private void ExitCityHallMenu()
@@ -220,7 +298,9 @@ public class HUD : MonoBehaviour
 
 		MultipurposeBox.SetActive(true);
 		MultipurposeTitle.SetActive(true);
-		Title.text = _CurrentBuilding._Type.ToString();
+
+		string title = (_CurrentBuilding._Type == Building.BuildingType.OuterWorld) ? "Outer World" : _CurrentBuilding._Type.ToString();
+		Title.text = title;
 		
 		ResidentMenu.SetActive(true);
 		
@@ -305,6 +385,8 @@ public class HUD : MonoBehaviour
 
 		ResetResidentMenu();
 		InitializeResidentMenu();
+
+		SoundManager.PlaySoundEffectOneShot("button_confirm_again");
 	}
 	
 	private void ExitResidentMenu()
@@ -318,6 +400,195 @@ public class HUD : MonoBehaviour
 		MultipurposeTitle.SetActive(false);
 	}
 
+	private void EnterBuildingMenu()
+	{
+		MultipurposeBox.SetActive(true);
+		MultipurposeTitle.SetActive(true);
+		Title.text = "Expand World";
+		
+		BuildingMenu.SetActive(true);
+
+		_ClickBoundary = BuildingMenu.GetComponent<BoxCollider2D>();
+		_BuildMenuBoundaries = new BoxCollider[2];
+		_BuildMenuBoundaries[0] = ArrowLeft.GetComponent<BoxCollider>();
+		_BuildMenuBoundaries[1] = ArrowRight.GetComponent<BoxCollider>();
+
+		BuildButton.OnClick += Build;
+
+		ShowBuildPage(_BuildMenuPage);
+	}
+
+	private int CalculateBuildPrice(int index)
+	{
+		int price = Building.BUILDING_PRICE[index] + (Building.PRICE_INFLATION * ProfileManager.Instance.WorldSize);
+		return price;
+	}
+
+	private void Build()
+	{
+		int price = CalculateBuildPrice(_BuildMenuPage);
+		bool bought = MainSceneController.SpendMoney(price);
+
+		if (bought)
+		{
+			Building.BuildingType type = Building.BuildingType.None;
+
+			if (_BuildMenuPage == 0)
+				type = Building.BuildingType.House;
+			else if (_BuildMenuPage == 1)
+				type = Building.BuildingType.Bar;
+			else if (_BuildMenuPage == 2)
+				type = Building.BuildingType.Shop;
+
+			MainSceneController.BuildNewBuilding(type);
+
+			StartCoroutine(Done());
+
+			SoundManager.PlaySoundEffectOneShot("building_now");
+		}		
+		else
+		{
+			SoundManager.PlaySoundEffectOneShot("button_error");
+		}
+	}
+
+	private void NextPage()
+	{
+		ArrowLeft.OnClick -= PrevPage;
+		ArrowRight.OnClick -= NextPage;
+
+		ShowBuildPage(_BuildMenuPage + 1);
+
+		SoundManager.PlaySoundEffectOneShot("button_confirm");
+	}
+
+	private void PrevPage()
+	{
+		ArrowLeft.OnClick -= PrevPage;
+		ArrowRight.OnClick -= NextPage;
+
+		ShowBuildPage(_BuildMenuPage - 1);
+
+		SoundManager.PlaySoundEffectOneShot("button_confirm");
+	}
+
+	private void ShowBuildPage(int index)
+	{
+		int len = BuildMenuPages.Length;
+
+		if (index < 0 || index >= len)
+			return;
+
+		for(int i=0;i<len;i++)
+		{
+			if (i==index)
+				BuildMenuPages[i].SetActive(true);
+			else
+				BuildMenuPages[i].SetActive(false);
+
+			BuildPrice.text = CalculateBuildPrice(index).ToString();
+		}
+
+		if (index == 0)
+		{
+			ArrowLeft.gameObject.SetActive(false);
+			ArrowRight.gameObject.SetActive(true);
+
+			ArrowRight.OnClick += NextPage;
+		}
+		else if (index == len - 1)
+		{
+			ArrowLeft.gameObject.SetActive(true);
+			ArrowRight.gameObject.SetActive(false);
+
+			ArrowLeft.OnClick += PrevPage;
+		}
+		else
+		{
+			ArrowLeft.gameObject.SetActive(true);
+			ArrowRight.gameObject.SetActive(true);
+
+			ArrowLeft.OnClick += PrevPage;
+			ArrowRight.OnClick += NextPage;
+		}
+
+		_BuildMenuPage = index;
+	}
+
+	private void ExitBuildingMenu()
+	{
+		BuildButton.OnClick -= Build;
+		ArrowLeft.OnClick -= PrevPage;
+		ArrowRight.OnClick -= NextPage;
+
+		_ClickBoundary = null;
+		_BuildMenuBoundaries = null;
+		
+		BuildingMenu.SetActive(false);
+		
+		MultipurposeBox.SetActive(false);
+		MultipurposeTitle.SetActive(false);
+	}
+
+	private void EnterPauseMenu()
+	{
+		PauseCreditText.SetActive(true);
+		PauseResumeButton.gameObject.SetActive(true);
+		PauseResetButton.gameObject.SetActive(true);
+
+		_ResetCounter = 3;
+
+		_ResetClicked = new bool[_ResetCounter];
+		for(int i=0;i<_ResetCounter;i++) _ResetClicked[i] = false;
+
+		PauseCounter.text = _ResetCounter + "x!";
+
+		PauseResumeButton.OnClick += ResumeGame;
+		PauseResetButton.OnClick += ResetGame;
+	}
+
+	private void ResetGame()
+	{
+		int times = 0;
+		foreach(bool b in _ResetClicked) 
+			if (b) times++;
+
+		if (times == 2)
+		{
+			MainSceneController.ResetGame();
+			
+			StartCoroutine(Done());
+			
+			SoundManager.PlaySoundEffectOneShot("button_back");
+		}
+		else
+		{
+			_ResetClicked[times] = true;
+
+			_ResetCounter--;
+			PauseCounter.text = _ResetCounter + "x!";
+		}
+	}
+
+	private void ResumeGame()
+	{
+		StartCoroutine(Done());
+		
+		SoundManager.PlaySoundEffectOneShot("button_back");
+	}
+
+	private void ExitPauseMenu()
+	{
+		PauseResumeButton.OnClick -= ResumeGame;
+		PauseResetButton.OnClick -= ResetGame;
+
+		_ResetClicked = null;
+
+		PauseCreditText.SetActive(false);
+		PauseResumeButton.gameObject.SetActive(false);
+		PauseResetButton.gameObject.SetActive(false);
+	}
+
 	private void EnterState()
 	{
 		Utilities.IS_PAUSED = true;
@@ -329,6 +600,12 @@ public class HUD : MonoBehaviour
 			EnterCityHallMenu();
 		else if (_State == UIState.ResidentsMenu)
 			EnterResidentMenu();
+		else if (_State == UIState.BuildMenu)
+			EnterBuildingMenu();
+		else if (_State == UIState.PauseMenu)
+			EnterPauseMenu();
+
+		SoundManager.PlaySoundEffectOneShot("button_confirm");
 	}
 
 	private void ExitState()
@@ -339,6 +616,10 @@ public class HUD : MonoBehaviour
 			ExitCityHallMenu();
 		else if (_State == UIState.ResidentsMenu)
 			ExitResidentMenu();
+		else if (_State == UIState.BuildMenu)
+			ExitBuildingMenu();
+		else if (_State == UIState.PauseMenu)
+			ExitPauseMenu();
 
 		DisableOverlay();
 		Utilities.IS_PAUSED = false;
@@ -398,6 +679,9 @@ public class HUD : MonoBehaviour
 	public static void ShowPauseMenu()
 	{
 		if (s_Instance == null) return;
+
+		s_Instance._State = UIState.PauseMenu;
+		s_Instance.EnterState();
 	}
 
 	public static void ShowCommunicationCenterMenu()
@@ -429,6 +713,9 @@ public class HUD : MonoBehaviour
 	public static void ShowBuildMenu()
 	{
 		if (s_Instance == null) return;
+
+		s_Instance._State = UIState.BuildMenu;
+		s_Instance.EnterState();
 	}
 
 

@@ -140,10 +140,10 @@ MonoBehaviour:
     normals: []
     tangents: []
     uvs:
-    - {x: .757813454, y: .00195410149}
-    - {x: .984374046, y: .00195410149}
-    - {x: .757813454, y: .324217767}
-    - {x: .984374046, y: .324217767}
+    - {x: .756836891, y: .00195410149}
+    - {x: .983397484, y: .00195410149}
+    - {x: .756836891, y: .324217767}
+    - {x: .983397484, y: .324217767}
     indices: 000000000300000001000000020000000300000000000000
     material: {fileID: 2100000, guid: 57c404fd5cd4349eda159a9b55c12e20, type: 2}
     materialId: 0
@@ -167,24 +167,24 @@ MonoBehaviour:
     attachPoints: []
   - name: building_house
     boundsData:
-    - {x: 0, y: 162, z: 0}
-    - {x: 388, y: 324, z: 0}
+    - {x: 0, y: 161.5, z: 0}
+    - {x: 388, y: 323, z: 0}
     untrimmedBoundsData:
-    - {x: 0, y: 162, z: 0}
-    - {x: 388, y: 324, z: 0}
+    - {x: 0, y: 161.5, z: 0}
+    - {x: 388, y: 323, z: 0}
     texelSize: {x: 1, y: 1}
     positions:
     - {x: -194, y: 0, z: 0}
     - {x: 194, y: 0, z: 0}
-    - {x: -194, y: 324, z: 0}
-    - {x: 194, y: 324, z: 0}
+    - {x: -194, y: 323, z: 0}
+    - {x: 194, y: 323, z: 0}
     normals: []
     tangents: []
     uvs:
     - {x: .437500983, y: .00195410149}
     - {x: .437500983, y: .380858392}
-    - {x: .753905296, y: .00195410149}
-    - {x: .753905296, y: .380858392}
+    - {x: .752928734, y: .00195410149}
+    - {x: .752928734, y: .380858392}
     indices: 000000000300000001000000020000000300000000000000
     material: {fileID: 2100000, guid: 57c404fd5cd4349eda159a9b55c12e20, type: 2}
     materialId: 0
@@ -346,7 +346,7 @@ MonoBehaviour:
   loadable: 0
   invOrthoSize: 2
   halfTargetHeight: .5
-  buildKey: 2126865071
+  buildKey: 1951821015
   dataGuid: 77b0686cc9be944ba8afc82a2e30a44d
   managedSpriteCollection: 0
   hasPlatformData: 0

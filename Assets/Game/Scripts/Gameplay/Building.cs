@@ -8,7 +8,15 @@ public class Building : MonoBehaviour
 	
 	public const float START_Y = 280f;
 	public const int MAX_RESIDENT = 3;
-	
+	public const int PRICE_INFLATION = 7500;
+
+	public static readonly int[] BUILDING_PRICE = 
+	{
+		5000,		//House
+		7500,		//Bar
+		10000,		//Shop
+	};
+
 	#endregion
 
 	public enum BuildingType
@@ -93,6 +101,12 @@ public class Building : MonoBehaviour
 		return _Transform.position.x;
 	}
 
+	public void MovePosition(float offset)
+	{
+		Vector3 oldPos = _Transform.position;
+		_Transform.position = new Vector3(oldPos.x + offset, oldPos.y, oldPos.z);
+	}
+
 	public int TotalResidents()
 	{
 		return _Residents.Count;
@@ -122,6 +136,7 @@ public class Building : MonoBehaviour
 		{
 			Mukya mukya = _Residents[index];
 			mukya.UnNone();
+			mukya.SetPosition(Position());
 			
 			_Residents.RemoveAt(index);
 

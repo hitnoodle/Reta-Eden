@@ -19,6 +19,11 @@ public class CameraDrag : MonoBehaviour
 	private Vector3 _LastDragPosition;
 	private float _CurrentSpeed;
 
+#if UNITY_ANDROID
+	private float _TouchBeganTime;
+	private float _TouchDragTime = 0.15f;
+#endif
+
 	// Use this for initialization
 	void Start() 
 	{
@@ -68,34 +73,89 @@ public class CameraDrag : MonoBehaviour
 			_Time = 0.0f;
 		}
 
-		if(Input.GetMouseButtonDown(0))
+		if (Input.touchCount > 0)
 		{
-			_TouchOrigin = Input.mousePosition;
-			_LastDragPosition = _TouchOrigin;
-
-			_IsDragging = true;
-			_UnderInertia = false;
+			foreach(Touch t in Input.touches)
+			{
+				if (t.phase == TouchPhase.Began)
+				{
+					_TouchOrigin = Input.mousePosition;
+					_LastDragPosition = _TouchOrigin;
+					
+					_TouchBeganTime = Time.time;
+				}
+				else if (t.phase == TouchPhase.Moved)
+				{
+					if (!_IsDragging)
+					{
+						if (Time.time - _TouchBeganTime > _TouchDragTime)
+						{
+							_IsDragging = true;
+							_UnderInertia = false;
+						}
+					}
+					else
+					{
+						Vector3 pos = _Camera.ScreenToViewportPoint(Input.mousePosition - _LastDragPosition);
+						
+						_CurrentSpeed = pos.x;
+						MoveCamera(_CurrentSpeed * -1);
+						
+						_LastDragPosition = t.position;
+					}
+				}
+				else if (t.phase == TouchPhase.Ended)
+				{
+					if (_IsDragging)
+					{
+						_IsDragging = false;
+						_UnderInertia = true;
+					}
+				}
+			}
 		}
+		else
+		{
+			if(Input.GetMouseButtonDown(0))
+			{
+				_TouchOrigin = Input.mousePosition;
+				_LastDragPosition = _TouchOrigin;
+				
+				_IsDragging = true;
+				_UnderInertia = false;
+			}
 			
-		if (!Input.GetMouseButton(0))
-		{
-			_IsDragging = false;
-			_UnderInertia = true;
-		}
-
-		if (_IsDragging)
-		{
-			Vector3 pos = _Camera.ScreenToViewportPoint(Input.mousePosition - _LastDragPosition);
-
-			_CurrentSpeed = pos.x;
-			MoveCamera(_CurrentSpeed * -1);
-
-			_LastDragPosition = Input.mousePosition;
+			if (!Input.GetMouseButton(0))
+			{
+				_IsDragging = false;
+				_UnderInertia = true;
+			}
+			
+			if (_IsDragging)
+			{
+				Vector3 pos = _Camera.ScreenToViewportPoint(Input.mousePosition - _LastDragPosition);
+				
+				_CurrentSpeed = pos.x;
+				MoveCamera(_CurrentSpeed * -1);
+				
+				_LastDragPosition = Input.mousePosition;
+			}
 		}
 	}
 
 	public bool IsMoving()
 	{
-		return _CurrentSpeed != 0f || _Time != 0f;
+		bool move = false;
+
+		if (Input.touchCount > 0)
+		{
+			move = _IsDragging;
+		}
+		else
+		{
+			move = _CurrentSpeed != 0f || _Time != 0f; 
+		}
+
+		return move;
 	}
 }
