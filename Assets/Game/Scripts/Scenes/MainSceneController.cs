@@ -19,21 +19,21 @@ public class MainSceneController : MonoBehaviour
 	private World _World;
 
 	//Building information
-	public List<Building> Buildings;
-	public Building BuildingNone;
-	public Building BuildingCityHall;
+	private List<Building> _Buildings;
+	private Building _BuildingNone;
+	private Building _BuildingCityHall;
 
-	public Transform BuildingsTransform;
+	private Transform _BuildingsTransform;
 
 	//Mukyas information
-	private List<Mukya> Mukyas;
+	private List<Mukya> _Mukyas;
 	private Mukya _SelectedMukya;
 
 	private Transform _MukyasTransform;
 
 	//Diamond information
-	private List<Diamond> Diamonds;
-	private List<Diamond> DiamondsActive;
+	private List<Diamond> _Diamonds;
+	private List<Diamond> _DiamondsActive;
 
 	//Player information
 	private int _Money;
@@ -49,7 +49,7 @@ public class MainSceneController : MonoBehaviour
 		}
 	}
 
-	private int[] _Diamonds;
+	private int[] _PlayerDiamonds;
 
 	//Main Camera
 	private Camera _Camera;
@@ -60,21 +60,26 @@ public class MainSceneController : MonoBehaviour
 
 	private Vector2 _TouchOrigin;
 	private float _TouchTime;
+	private float _TouchDetectTime = 0.08f;
 	private bool _IsTouched = false;
 	private bool _IsTouchedMove = false;
 
 	// Use this for initialization
 	void Awake() 
 	{
+		ProfileManager.Instance.Load();
+
 		s_Instance = this;
 
 		//Create arrays
-		Mukyas = new List<Mukya>();
+		_Buildings = new List<Building>();
 
-		Diamonds = new List<Diamond>();
-		DiamondsActive = new List<Diamond>();
+		_Mukyas = new List<Mukya>();
 
-		_Diamonds = new int[DIAMOND_TYPES];
+		_Diamonds = new List<Diamond>();
+		_DiamondsActive = new List<Diamond>();
+
+		_PlayerDiamonds = new int[DIAMOND_TYPES];
 		_OngoingResidents = new Hashtable();
 
 		//Set camera
@@ -113,6 +118,29 @@ public class MainSceneController : MonoBehaviour
 		float offset = (float)Screen.width * 768f / (float)Screen.height;
 		_CameraDrag.MaxX = _World.Width - offset;
 
+		//Create buildings
+		GameObject buildingsObject = Utilities.CreateGameObject("Buildings", new Vector3(0, Building.START_Y, -1), null);
+		_BuildingsTransform = buildingsObject.transform;
+
+		List<ProfileManager.BuildingData> b_data = ProfileManager.Instance.Buildings;
+		foreach(ProfileManager.BuildingData b_datum in b_data)
+		{
+			GameObject buildingObject = (GameObject)Instantiate(Resources.Load("Prefabs/Building_" + b_datum.Type));
+			buildingObject.name = "Building" + b_datum.Type;
+			
+			Transform buildingTransform = buildingObject.transform;
+			buildingTransform.parent = _BuildingsTransform;
+			buildingTransform.localPosition = new Vector3(b_datum.Position, 0, 0);
+			
+			Building building = buildingObject.GetComponent<Building>();
+			_Buildings.Add(building);
+
+			if (b_datum.Type == "CityHall") 
+				_BuildingCityHall = building;
+			else if (b_datum.Type == "None")
+				_BuildingNone = building;
+		}
+
 		//Create mukyas
 		GameObject mukyasObject = Utilities.CreateGameObject("Mukyas", new Vector3(0, Mukya.START_Y, -2), null);
 		_MukyasTransform = mukyasObject.transform;
@@ -121,13 +149,14 @@ public class MainSceneController : MonoBehaviour
 		Mukya.END_X = _World.Width - 25f;
 
 		//Load mukyas data
-		foreach(Mukya.MukyaRace race in System.Enum.GetValues(typeof(Mukya.MukyaRace)))
+		List<ProfileManager.MukyaData> m_data = ProfileManager.Instance.Mukyas;
+		foreach(ProfileManager.MukyaData m_datum in m_data)
 		{
 			float x = Random.Range(Mukya.START_X, Mukya.END_X);
-			MainSceneController.AddNewMukya(race, x);
+			MainSceneController.AddNewMukya(m_datum.Race, m_datum.EnergyStatus, m_datum.SocialStatus, m_datum.WorkStatus, x);
 		}
 
-		//CreateDiamonds
+		//Create Diamonds
 		GameObject diamondsObject = Utilities.CreateGameObject("Diamonds", new Vector3(0, Diamond.START_Y, -3), null);
 		Transform diamondsTransform = diamondsObject.transform;
 
@@ -142,7 +171,7 @@ public class MainSceneController : MonoBehaviour
 				GameObject diamondObject = (GameObject)Instantiate(Resources.Load("Prefabs/Diamond_" + type_string));
 
 				Diamond diamond = diamondObject.GetComponent<Diamond>();
-				Diamonds.Add(diamond);
+				_Diamonds.Add(diamond);
 
 				Transform diamondTransform = diamondObject.transform;
 				diamondTransform.name = "Diamond" + type_string;
@@ -154,14 +183,14 @@ public class MainSceneController : MonoBehaviour
 
 		//Shuffle diamond arrays first
 		System.Random r = new System.Random();
-		int n = Diamonds.Count;  
+		int n = _Diamonds.Count;  
 		while (n > 1) {  
 			n--;  
 			int k = r.Next(n + 1);  
-			Diamond value = Diamonds[k];  
-			Diamonds[k] = Diamonds[n];  
-			Diamonds[n] = value;  
-		}  
+			Diamond value = _Diamonds[k];  
+			_Diamonds[k] = _Diamonds[n];  
+			_Diamonds[n] = value;  
+		} 
 	}
 
 	IEnumerator StartBackgroundMusic()
@@ -188,8 +217,20 @@ public class MainSceneController : MonoBehaviour
 	IEnumerator ResetGameCoroutine()
 	{
 		yield return new WaitForSeconds(0.15f);
-		
+
+		ProfileManager.Instance.Reset();
+		ProfileManager.Instance.ResetProgress();
+		ProfileManager.Instance.InitialData();
+		ProfileManager.Instance.Save();
+
 		Application.LoadLevel("TitleScene");
+	}
+
+	IEnumerator SaveGameCoroutine()
+	{
+		yield return new WaitForSeconds(0.15f);
+
+		MainSceneController.SaveGame();
 	}
 
 	IEnumerator RemoveMukyaCoroutine(Mukya mukya)
@@ -202,7 +243,9 @@ public class MainSceneController : MonoBehaviour
 			HUD.HideMukyaInformation();
 		}
 
-		Mukyas.Remove(mukya);
+		_Mukyas.Remove(mukya);
+		MainSceneController.SaveGame();
+
 		DestroyObject(mukya.gameObject);
 	}
 
@@ -216,7 +259,7 @@ public class MainSceneController : MonoBehaviour
 			yield return new WaitForSeconds(wait);
 
 			//Spawn diamonds at buildings
-			foreach(Building b in Buildings)
+			foreach(Building b in _Buildings)
 			{
 				if (b._Type == Building.BuildingType.Bar ||
 				    b._Type == Building.BuildingType.House ||
@@ -247,15 +290,15 @@ public class MainSceneController : MonoBehaviour
 		while (Utilities.IS_PAUSED)
 			yield return new WaitForSeconds(delay);
 
-		if (DiamondsActive.Count < MAX_DIAMOND_SPAWNED)
+		if (_DiamondsActive.Count < MAX_DIAMOND_SPAWNED)
 		{
-			Diamond d = Diamonds[0];
-			Diamonds.RemoveAt(0);
+			Diamond d = _Diamonds[0];
+			_Diamonds.RemoveAt(0);
 
 			d.Spawn(b.Position());
 			d.OnSpawnDone += UnSpawnDiamond;
 
-			DiamondsActive.Add(d);
+			_DiamondsActive.Add(d);
 
 			SoundManager.PlaySoundEffectOneShot("crystal_spawned");
 		}
@@ -267,8 +310,8 @@ public class MainSceneController : MonoBehaviour
 
 		d.gameObject.SetActive(false);
 
-		DiamondsActive.Remove(d);
-		Diamonds.Add(d);
+		_DiamondsActive.Remove(d);
+		_Diamonds.Add(d);
 	}
 	
 	// Update is called once per frame
@@ -304,7 +347,7 @@ public class MainSceneController : MonoBehaviour
 						if (!_IsTouchedMove)
 						{
 							_TouchTime += Time.deltaTime;
-							if (_TouchTime >= 0.1f)
+							if (_TouchTime >= _TouchDetectTime)
 							{
 								_IsTouched = true;
 								checkInput = true;
@@ -352,7 +395,7 @@ public class MainSceneController : MonoBehaviour
 			if (touchedDiamond != null)
 			{
 				int index = (int)touchedDiamond._Type;
-				SetDiamond(index, _Diamonds[index] + 1);
+				SetDiamond(index, _PlayerDiamonds[index] + 1);
 				UnSpawnDiamond(touchedDiamond);
 
 				SoundManager.PlaySoundEffectOneShot("touched_crystal");
@@ -438,7 +481,7 @@ public class MainSceneController : MonoBehaviour
 		if (newValue < 0) newValue = 0;
 		else if (newValue > MAX_PLAYER_DIAMOND) newValue = MAX_PLAYER_DIAMOND;
 
-		_Diamonds[index] = newValue;
+		_PlayerDiamonds[index] = newValue;
 		HUD.SetDiamond(index, newValue);
 	}
 
@@ -487,7 +530,7 @@ public class MainSceneController : MonoBehaviour
 
 	private Diamond GetSelectedDiamond(Vector2 pos)
 	{
-		foreach(Diamond diamond in DiamondsActive)
+		foreach(Diamond diamond in _DiamondsActive)
 		{
 			if (diamond.IsContainingPosition(pos))
 				return diamond;
@@ -498,7 +541,7 @@ public class MainSceneController : MonoBehaviour
 
 	private Building GetSelectedBuilding(Vector2 pos)
 	{
-		foreach(Building building in Buildings)
+		foreach(Building building in _Buildings)
 		{
 			if (building.IsContainingPosition(pos))
 				return building;
@@ -509,7 +552,7 @@ public class MainSceneController : MonoBehaviour
 
 	private Mukya GetSelectedMukya(Vector2 pos)
 	{
-		foreach(Mukya mukya in Mukyas)
+		foreach(Mukya mukya in _Mukyas)
 		{
 			if (mukya.IsContainingPosition(pos))
 				return mukya;
@@ -525,7 +568,7 @@ public class MainSceneController : MonoBehaviour
 		int oldMoney = s_Instance.Money;
 		for(int i=0;i<DIAMOND_TYPES;i++)
 		{
-			oldMoney += s_Instance._Diamonds[i] * Diamond.DIAMOND_PRICE[i];
+			oldMoney += s_Instance._PlayerDiamonds[i] * Diamond.DIAMOND_PRICE[i];
 			s_Instance.SetDiamond(i,0);
 		}
 
@@ -536,26 +579,36 @@ public class MainSceneController : MonoBehaviour
 	{
 		if (s_Instance == null) return false;
 
-		return AddNewMukya(race, s_Instance.BuildingCityHall.Position());
+		return AddNewMukya(race, s_Instance._BuildingCityHall.Position());
 	}
 
 	public static bool AddNewMukya(Mukya.MukyaRace race, float position)
 	{
+		string raceString = race.ToString();
+		ProfileManager.Instance.Mukyas.Add(new ProfileManager.MukyaData(raceString, 100f, 100f, 100f));
+
+		return AddNewMukya(raceString, 100f, 100f, 100f, position);
+	}
+
+	public static bool AddNewMukya(string race, float m_energy, float m_social, float m_work, float position)
+	{
 		if (s_Instance == null) return false;
 		//if (s_Instance.Mukyas.Count >= (s_Instance._World.Width * MAX_MUKYA_PER_LEVEL)) return false;
 
-		string raceString = race.ToString();
-		GameObject mukyaObject = (GameObject)Instantiate(Resources.Load("Prefabs/Mukya_" + raceString));
+		GameObject mukyaObject = (GameObject)Instantiate(Resources.Load("Prefabs/Mukya_" + race));
 		
 		Mukya mukya = mukyaObject.GetComponent<Mukya>();
-		s_Instance.Mukyas.Add(mukya);
+		mukya._EnergyStatus = m_energy;
+		mukya._SocialStatus = m_social;
+		mukya._WorkStatus = m_work;
+		s_Instance._Mukyas.Add(mukya);
 		
 		Transform mukyaTransform = mukyaObject.transform;
 		mukyaTransform.name = "Mukya" + mukya._Race.ToString();
 		mukyaTransform.parent = s_Instance._MukyasTransform;
 		
 		mukyaTransform.localPosition = new Vector3(position, 0, 0);
-
+		
 		return true;
 	}
 
@@ -573,7 +626,7 @@ public class MainSceneController : MonoBehaviour
 	{
 		if (s_Instance == null) return false;
 
-		foreach(Mukya mukya in s_Instance.Mukyas)
+		foreach(Mukya mukya in s_Instance._Mukyas)
 		{
 			if (mukya._Race == Mukya.MukyaRace.Ghost)
 			{
@@ -608,13 +661,13 @@ public class MainSceneController : MonoBehaviour
 		buildingObject.name = "Building" + type.ToString();
 
 		Transform buildingTransform = buildingObject.transform;
-		buildingTransform.parent = s_Instance.BuildingsTransform;
-		buildingTransform.localPosition = new Vector3(s_Instance.BuildingNone.Position(), 0, 0);
+		buildingTransform.parent = s_Instance._BuildingsTransform;
+		buildingTransform.localPosition = new Vector3(s_Instance._BuildingNone.Position(), 0, 0);
 
 		Building building = buildingObject.GetComponent<Building>();
-		s_Instance.Buildings.Add(building);
+		s_Instance._Buildings.Add(building);
 
-		s_Instance.BuildingNone.MovePosition(World.TILE_WIDTH * World.TILE_PER_ADDITION);
+		s_Instance._BuildingNone.MovePosition(World.TILE_WIDTH * World.TILE_PER_ADDITION);
 
 		//Update camera drag
 		float offset = (float)Screen.width * 768f / (float)Screen.height;
@@ -622,6 +675,34 @@ public class MainSceneController : MonoBehaviour
 
 		//Update mukya end
 		Mukya.END_X = s_Instance._World.Width - 25f;
+
+		//Save
+		s_Instance.StartCoroutine(s_Instance.SaveGameCoroutine());
+	}
+
+	public static void SaveGame()
+	{
+		if (s_Instance == null) return;
+
+		//Save attributes
+		ProfileManager.Instance.Money = s_Instance._Money;
+		ProfileManager.Instance.Diamonds = s_Instance._PlayerDiamonds;
+		ProfileManager.Instance.WorldSize = s_Instance._World.Size;
+
+		//Save building
+		ProfileManager.Instance.Buildings.Clear();
+		ProfileManager.Instance.Buildings = new List<ProfileManager.BuildingData>();
+		foreach(Building b in s_Instance._Buildings)
+			ProfileManager.Instance.Buildings.Add(new ProfileManager.BuildingData(b._Type.ToString(), b.Position()));
+
+		//Save mukya
+		ProfileManager.Instance.Mukyas.Clear();
+		ProfileManager.Instance.Mukyas = new List<ProfileManager.MukyaData>();
+		foreach(Mukya m in s_Instance._Mukyas)
+			ProfileManager.Instance.Mukyas.Add(new ProfileManager.MukyaData(m._Race.ToString(), m._EnergyStatus, m._SocialStatus, m._WorkStatus));
+
+		//Save
+		ProfileManager.Instance.Save();
 	}
 
 	public static void ResetGame()

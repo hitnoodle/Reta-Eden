@@ -21,7 +21,7 @@ public class CameraDrag : MonoBehaviour
 
 #if UNITY_ANDROID
 	private float _TouchBeganTime;
-	private float _TouchDragTime = 0.15f;
+	private float _TouchDragTime = 0.08f; //0.15f
 #endif
 
 	// Use this for initialization

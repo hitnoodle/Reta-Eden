@@ -54,6 +54,9 @@ public class TutorialSceneController : MonoBehaviour
 
 	void MainScene()
 	{
+		ProfileManager.Instance.TutorialPlayed = true;
+		ProfileManager.Instance.Save();
+
 		Application.LoadLevel("MainScene");
 
 		SoundManager.PlaySoundEffectOneShot("button_confirm_again");

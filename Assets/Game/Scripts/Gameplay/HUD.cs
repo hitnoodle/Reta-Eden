@@ -252,7 +252,8 @@ public class HUD : MonoBehaviour
 
 	private int CalculateResidentPrice()
 	{
-		int price = Mukya.MUKYA_PRICE + (Mukya.PRICE_INFLATION * ProfileManager.Instance.WorldSize);
+		int inflation = Mukya.PRICE_INFLATION * (ProfileManager.Instance.WorldSize - 1);
+		int price = Mukya.MUKYA_PRICE + inflation;
 		return price;
 	}
 
@@ -267,7 +268,8 @@ public class HUD : MonoBehaviour
 
 			int race = Random.Range(0, 4) + 1;
 			MainSceneController.AddNewMukya((Mukya.MukyaRace)race);
-			
+
+			MainSceneController.SaveGame();
 			StartCoroutine(Done());
 			
 			SoundManager.PlaySoundEffectOneShot("building_now");
@@ -281,6 +283,8 @@ public class HUD : MonoBehaviour
 	private void ExchangeCrystal()
 	{
 		MainSceneController.ExchangeMoneyWithCrystal();
+
+		MainSceneController.SaveGame();
 		StartCoroutine(Done());
 
 		SoundManager.PlaySoundEffectOneShot("building_now");
@@ -427,7 +431,8 @@ public class HUD : MonoBehaviour
 
 	private int CalculateBuildPrice(int index)
 	{
-		int price = Building.BUILDING_PRICE[index] + (Building.PRICE_INFLATION * ProfileManager.Instance.WorldSize);
+		int inflation = Building.PRICE_INFLATION * (ProfileManager.Instance.WorldSize - 1);
+		int price = Building.BUILDING_PRICE[index] + inflation;
 		return price;
 	}
 
