@@ -22,6 +22,8 @@ public class TitleSceneController : MonoBehaviour
 	{
 		yield return new WaitForSeconds(WaitDuration);
 
+		Reta.Instance.ProcessEvents();
+
 		if (ProfileManager.Instance.TutorialPlayed)
 			Application.LoadLevel("MainScene");
 		else 

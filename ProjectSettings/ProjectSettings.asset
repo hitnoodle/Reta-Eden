@@ -76,7 +76,7 @@ PlayerSettings:
   iPhoneBundleIdentifier: net.rukanishino.eden
   productGUID: db0b4ca96662c4a18b608984a2c09849
   iPhoneBundleVersion: 0.1
-  AndroidBundleVersionCode: 1
+  AndroidBundleVersionCode: 3
   AndroidMinSdkVersion: 9
   AndroidPreferredInstallLocation: 1
   aotOptions: 

@@ -102,35 +102,48 @@ namespace RetaClient
 	/* Class for holding timed event datum */
 	public class TimedEventDatum : EventDatum
 	{
+		public DateTime _TimeEnded;
 		public TimeSpan _Duration;
+
+		public bool _IsFinished;
 		public bool IsFinished 
 		{
-			get { return _Duration != TimeSpan.Zero; }
+			get { return _IsFinished; }
 		}
 
 		public TimedEventDatum() : base()
 		{
+			_TimeEnded = _Time;
 			_Duration = TimeSpan.Zero;
+			_IsFinished = false;
 		}
 
 		public TimedEventDatum(string name) : base(name)
 		{
+			_TimeEnded = _Time;
 			_Duration = TimeSpan.Zero;
+			_IsFinished = false;
 		}
 
 		public TimedEventDatum(string name, List<Parameter> parameters) : base(name, parameters)
 		{
+			_TimeEnded = _Time;
 			_Duration = TimeSpan.Zero;
+			_IsFinished = false;
 		}
 
 		public void EndEvent()
 		{
-			_Duration = DateTime.Now.ToUniversalTime() - _Time;
+			_TimeEnded = DateTime.Now.ToUniversalTime();
+			_Duration = _TimeEnded - _Time;
+			_IsFinished = true;
 		}
 
 		public void EndEvent(List<Parameter> parameters)
 		{
-			_Duration = DateTime.Now.ToUniversalTime() - _Time;
+			_TimeEnded = DateTime.Now.ToUniversalTime();
+			_Duration = _TimeEnded - _Time;
+			_IsFinished = true;
 
 			if (_Parameters != null)
 			{
@@ -178,6 +191,9 @@ namespace RetaClient
 			}
 
 			dict.Add("Time", _Time.ToString());
+
+			if (_IsFinished)
+				_Duration = _TimeEnded - _Time;
 
 			string ms = (int)_Duration.TotalMilliseconds + "ms";
 			dict.Add("Duration", ms);

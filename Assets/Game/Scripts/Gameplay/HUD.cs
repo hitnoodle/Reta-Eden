@@ -627,6 +627,8 @@ public class HUD : MonoBehaviour
 
 			_ResetCounter--;
 			PauseCounter.text = _ResetCounter + "x!";
+
+			SoundManager.PlaySoundEffectOneShot("button_error");
 		}
 	}
 

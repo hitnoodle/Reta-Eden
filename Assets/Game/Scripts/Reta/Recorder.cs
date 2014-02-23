@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 namespace RetaClient 
 {
@@ -26,9 +27,24 @@ namespace RetaClient
 			XmlManager.SaveInstanceAsXml("recorder", typeof(Recorder), this);
 		}
 
-		void Load()
+		public static Recorder Load()
 		{
+			//See path
+			string path = Application.persistentDataPath + "/recorder";
+			Recorder rec = null;
 
+			//Create first if haven't
+			if (!File.Exists(path))
+			{
+				rec = new Recorder();
+				rec.Save();
+			} 
+			else
+			{
+				rec = (Recorder)XmlManager.LoadInstanceAsXml("recorder", typeof(Recorder));
+			}
+
+			return rec;
 		}
 
 		#endregion

@@ -59,16 +59,8 @@ namespace RetaClient
 			GameObject.DontDestroyOnLoad(_GameObject); 
 
 			_Controller = _GameObject.AddComponent<RetaController>();
-
-			_Recorder = (Recorder)XmlManager.LoadInstanceAsXml("recorder", typeof(Recorder));
-			if (_Recorder == null) 
-				_Recorder = new Recorder();
-			else
-				ProcessEvents();
-
-			//_Recorder = new Recorder();
-
-			_Connector = _GameObject.AddComponent<Connector>();
+			_Recorder 	= Recorder.Load();
+			_Connector 	= _GameObject.AddComponent<Connector>();
 		}
 
 		#region Delegates
@@ -131,7 +123,7 @@ namespace RetaClient
 
 		#region Protected Event Processing
 
-		protected void ProcessEvents()
+		public void ProcessEvents()
 		{
 			ProcessEventData();
 			ProcessTimedEventData();
