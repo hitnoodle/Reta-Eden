@@ -60,15 +60,13 @@ namespace RetaClient
 
 			_Controller = _GameObject.AddComponent<RetaController>();
 
-			/*
 			_Recorder = (Recorder)XmlManager.LoadInstanceAsXml("recorder", typeof(Recorder));
 			if (_Recorder == null) 
 				_Recorder = new Recorder();
 			else
 				ProcessEvents();
-			*/
 
-			_Recorder = new Recorder();
+			//_Recorder = new Recorder();
 
 			_Connector = _GameObject.AddComponent<Connector>();
 		}
