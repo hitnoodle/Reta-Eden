@@ -105,8 +105,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _Type: 1
-  _PrimaryIncrease: 8
-  _SecondaryIncrease: 4
+  _PrimaryIncrease: 4
+  _SecondaryIncrease: .5
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

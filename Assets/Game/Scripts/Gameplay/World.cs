@@ -66,12 +66,18 @@ public class World : MonoBehaviour
 		}
 
 		if (Size > 1)
-			CreateAdditions(Size - 1);
+		{
+			int newSize = Size;
+			Size = 1;
+
+			for(int i=1;i<newSize;i++)
+				IncreaseWorldSize();
+		}
 	}
 
 	void CreateAdditions(int addSize)
 	{
-		int startX = (InitialTiles * TILE_WIDTH) + ((Size - 1) * TILE_PER_ADDITION * TILE_WIDTH);
+		int startX = (InitialTiles * TILE_WIDTH) + ((Size - 2) * TILE_PER_ADDITION * TILE_WIDTH);
 		int addition = addSize * TILE_PER_ADDITION;
 
 		//Season 
@@ -87,8 +93,6 @@ public class World : MonoBehaviour
 			tilesTransform.parent = _FloorsTransform;
 			tilesTransform.position = new Vector3(startX + (i * TILE_WIDTH), 0, 0);
 		}
-
-		Size += addSize;
 
 		//Create more background if needed
 		int more_background = (int)Mathf.Ceil(((float)Width - 2048f) / 1024f);
@@ -114,7 +118,7 @@ public class World : MonoBehaviour
 
 	public void IncreaseWorldSize()
 	{
+		Size += 1;
 		CreateAdditions(1);
-		ProfileManager.Instance.WorldSize += 1;
 	}
 }

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using RetaClient;
 
 public class HUD : MonoBehaviour 
 {
@@ -220,10 +221,18 @@ public class HUD : MonoBehaviour
 
 	private void Share()
 	{
-		/*
+		//Begin analytics
+
+		List<Parameter> parameters = new List<Parameter>();
+		parameters.Add(new Parameter("Feature", "Sharing Progress"));
+
+		Reta.Instance.Record("Social Feature Consumed", parameters);
+
+		//End analytics
+
 		StartCoroutine(Done());
+
 		SoundManager.PlaySoundEffectOneShot("button_confirm_again");
-		*/
 	}
 
 	private void ExitCommunicationMenu()
@@ -268,8 +277,17 @@ public class HUD : MonoBehaviour
 
 			int race = Random.Range(0, 4) + 1;
 			MainSceneController.AddNewMukya((Mukya.MukyaRace)race);
-
 			MainSceneController.SaveGame();
+
+			//Begin analytics
+
+			List<Parameter> parameters = new List<Parameter>();
+			parameters.Add(new Parameter("Feature", "Requesting Resident"));
+			
+			Reta.Instance.Record("Game Feature Consumed", parameters);
+
+			//End analytics
+
 			StartCoroutine(Done());
 			
 			SoundManager.PlaySoundEffectOneShot("building_now");
@@ -283,8 +301,17 @@ public class HUD : MonoBehaviour
 	private void ExchangeCrystal()
 	{
 		MainSceneController.ExchangeMoneyWithCrystal();
-
 		MainSceneController.SaveGame();
+
+		//Begin analytics
+		
+		List<Parameter> parameters = new List<Parameter>();
+		parameters.Add(new Parameter("Feature", "Exchanging Crystal"));
+		
+		Reta.Instance.Record("Game Feature Consumed", parameters);
+		
+		//End analytics
+
 		StartCoroutine(Done());
 
 		SoundManager.PlaySoundEffectOneShot("building_now");
@@ -397,6 +424,15 @@ public class HUD : MonoBehaviour
 		ResetResidentMenu();
 		InitializeResidentMenu();
 
+		//Begin analytics
+		
+		List<Parameter> parameters = new List<Parameter>();
+		parameters.Add(new Parameter("Feature", "Moving Resident Out"));
+		
+		Reta.Instance.Record("Game Feature Consumed", parameters);
+		
+		//End analytics
+
 		SoundManager.PlaySoundEffectOneShot("button_confirm_again");
 	}
 	
@@ -453,6 +489,15 @@ public class HUD : MonoBehaviour
 				type = Building.BuildingType.Shop;
 
 			MainSceneController.BuildNewBuilding(type);
+
+			//Begin analytics
+			
+			List<Parameter> parameters = new List<Parameter>();
+			parameters.Add(new Parameter("Feature", "Building New Building"));
+			
+			Reta.Instance.Record("Game Feature Consumed", parameters);
+			
+			//End analytics
 
 			StartCoroutine(Done());
 
@@ -568,7 +613,10 @@ public class HUD : MonoBehaviour
 		if (times == 2)
 		{
 			MainSceneController.ResetGame();
-			
+
+			//Analytics
+			Reta.Instance.Record("Game Reseted");
+
 			StartCoroutine(Done());
 			
 			SoundManager.PlaySoundEffectOneShot("button_back");

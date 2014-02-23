@@ -21,7 +21,7 @@ public class Mukya : MonoBehaviour
 	private const float DECREASE_MULTIPLIER = 1.5f; //Multiply decrease status
 
 	public const int MUKYA_PRICE = 1000;
-	public const int PRICE_INFLATION = 2500;
+	public const int PRICE_INFLATION = 500;
 
 	#endregion
 

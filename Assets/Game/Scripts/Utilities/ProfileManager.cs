@@ -96,7 +96,7 @@ public class ProfileManager
 		Mukyas.Add(new MukyaData("Pink", 100, 100, 100));
 
 		//First money
-		Money = 10000;
+		Money = 5000;
 	}
 	
 	public void ResetProgress() 

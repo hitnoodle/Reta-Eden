@@ -20,10 +20,10 @@ public class Diamond : MonoBehaviour
 
 	public static readonly int[] DIAMOND_PRICE = 
 	{
-		50,
-		150,
-		150,
-		1000
+		500,
+		1500,
+		1500,
+		10000
 	};
 
 	#endregion

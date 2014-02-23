@@ -8,7 +8,7 @@ public class Building : MonoBehaviour
 	
 	public const float START_Y = 280f;
 	public const int MAX_RESIDENT = 3;
-	public const int PRICE_INFLATION = 7500;
+	public const int PRICE_INFLATION = 2500;
 
 	public static readonly int[] BUILDING_PRICE = 
 	{

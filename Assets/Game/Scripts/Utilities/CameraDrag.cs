@@ -18,11 +18,9 @@ public class CameraDrag : MonoBehaviour
 	private Vector3 _TouchOrigin;
 	private Vector3 _LastDragPosition;
 	private float _CurrentSpeed;
-
-#if UNITY_ANDROID
+	
 	private float _TouchBeganTime;
 	private float _TouchDragTime = 0.08f; //0.15f
-#endif
 
 	// Use this for initialization
 	void Start() 

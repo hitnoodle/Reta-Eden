@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using RetaClient;
 
 public class TitleSceneController : MonoBehaviour 
 {
@@ -9,6 +10,10 @@ public class TitleSceneController : MonoBehaviour
 	void Start() 
 	{
 		ProfileManager.Instance.Load();
+
+		Reta.Instance.SetApplicationVersion("0.1");
+		//Reta.Instance.SetDebugMode(true);
+		//Reta.Instance.Disable();
 
 		StartCoroutine(NextScene());
 	}

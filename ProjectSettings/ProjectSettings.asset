@@ -69,7 +69,7 @@ PlayerSettings:
     height: 0
   m_SupportedAspectRatios:
     4:3: 1
-    5:4: 1
+    5:4: 0
     16:10: 1
     16:9: 1
     Others: 1
@@ -104,14 +104,26 @@ PlayerSettings:
   iPadHighResLandscapeSplashScreen: {fileID: 0}
   AndroidTargetDevice: 0
   AndroidSplashScreenScale: 0
-  AndroidKeystoreName: 
-  AndroidKeyaliasName: 
+  AndroidKeystoreName: /Users/ruka/Documents/Developments/Tugas Akhir /Eden/Resources/eden.keystore
+  AndroidKeyaliasName: eden_hallucinogen
   resolutionDialogBanner: {fileID: 0}
   m_BuildTargetIcons:
   - m_BuildTarget: 
     m_Icons:
     - m_Icon: {fileID: 0}
       m_Size: 128
+  - m_BuildTarget: Android
+    m_Icons:
+    - m_Icon: {fileID: 2800000, guid: 2f4d223d3c6084ca8af70a328f42e08f, type: 3}
+      m_Size: 144
+    - m_Icon: {fileID: 2800000, guid: 0fea839abad9d45b086d5feca49fd4c9, type: 3}
+      m_Size: 96
+    - m_Icon: {fileID: 2800000, guid: be9d332676c4c40e4a041a55dd348429, type: 3}
+      m_Size: 72
+    - m_Icon: {fileID: 2800000, guid: 3068edffbe20747d08793bec68015750, type: 3}
+      m_Size: 48
+    - m_Icon: {fileID: 2800000, guid: a074c0d2ca8d545d1a9eecefdfc06617, type: 3}
+      m_Size: 36
   m_BuildTargetBatching: []
   webPlayerTemplate: APPLICATION:Default
   m_TemplateCustomTags: {}

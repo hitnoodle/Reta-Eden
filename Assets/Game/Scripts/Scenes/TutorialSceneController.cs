@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using RetaClient;
 
 public class TutorialSceneController : MonoBehaviour 
 {
@@ -30,6 +32,9 @@ public class TutorialSceneController : MonoBehaviour
 	{
 		ShowPage(_PageIndex);
 
+		//Analytics
+		Reta.Instance.Record("Tutorial Duration",true);
+
 		StartCoroutine(StartBackgroundMusic());
 	}
 
@@ -56,6 +61,22 @@ public class TutorialSceneController : MonoBehaviour
 	{
 		ProfileManager.Instance.TutorialPlayed = true;
 		ProfileManager.Instance.Save();
+
+		//Begin analytics
+
+		Reta.Instance.EndTimedRecord("Tutorial Duration");
+
+		List<Parameter> parameterLevel = new List<Parameter>();
+		parameterLevel.Add(new Parameter("Level", "1"));
+
+		Reta.Instance.Record("Level Duration", parameterLevel, true);
+		
+		List<Parameter> parameterProgression = new List<Parameter>();
+		parameterProgression.Add(new Parameter("Increase", "5"));
+
+		Reta.Instance.Record("Game Progression", parameterProgression); 
+
+		//End analytics
 
 		Application.LoadLevel("MainScene");
 

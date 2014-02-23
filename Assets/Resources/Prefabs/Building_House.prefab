@@ -82,8 +82,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _Type: 4
-  _PrimaryIncrease: 8
-  _SecondaryIncrease: 4
+  _PrimaryIncrease: 4
+  _SecondaryIncrease: .5
 --- !u!114 &11400002
 MonoBehaviour:
   m_ObjectHideFlags: 1

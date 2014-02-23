@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using RetaClient;
 
 public class MainSceneController : MonoBehaviour 
 {
@@ -270,7 +271,7 @@ public class MainSceneController : MonoBehaviour
 					{
 						//Decrease timer according to building residents
 						int times = MAX_DIAMOND_SPAWNER_TIME - MIN_DIAMOND_SPAWNER_TIME / Building.MAX_RESIDENT;
-						int dec_timer = times * b.TotalResidents();
+						int dec_timer = times * (b.TotalResidents() - 1);
 						int spawn = Random.Range(MIN_DIAMOND_SPAWNER_TIME, MAX_DIAMOND_SPAWNER_TIME - dec_timer);
 
 						StartCoroutine(SpawnDiamond(b, spawn));
@@ -398,6 +399,15 @@ public class MainSceneController : MonoBehaviour
 				SetDiamond(index, _PlayerDiamonds[index] + 1);
 				UnSpawnDiamond(touchedDiamond);
 
+				//Begin analytics
+				
+				List<Parameter> parameters = new List<Parameter>();
+				parameters.Add(new Parameter("Feature", "Touching Crystal"));
+				
+				Reta.Instance.Record("Game Feature Consumed", parameters);
+				
+				//End analytics
+
 				SoundManager.PlaySoundEffectOneShot("touched_crystal");
 
 				return;
@@ -443,6 +453,15 @@ public class MainSceneController : MonoBehaviour
 								          + " " + touchedBuilding.Position()
 								          + " " + touchedBuilding._Type.ToString());
 								*/
+
+								//Begin analytics
+								
+								List<Parameter> parameters = new List<Parameter>();
+								parameters.Add(new Parameter("Feature", "Moving Resident In"));
+								
+								Reta.Instance.Record("Game Feature Consumed", parameters);
+								
+								//End analytics
 
 								SoundManager.PlaySoundEffectOneShot("meow2");
 							}
@@ -675,6 +694,22 @@ public class MainSceneController : MonoBehaviour
 
 		//Update mukya end
 		Mukya.END_X = s_Instance._World.Width - 25f;
+
+		//Begin analytics
+
+		Reta.Instance.EndTimedRecord("Level Duration");
+
+		List<Parameter> parameterLevel = new List<Parameter>();
+		parameterLevel.Add(new Parameter("Level", s_Instance._World.Size.ToString()));
+
+		Reta.Instance.Record("Level Duration", parameterLevel, true);
+		
+		List<Parameter> parameterProgression = new List<Parameter>();
+		parameterProgression.Add(new Parameter("Increase", "5"));
+
+		Reta.Instance.Record("Game Progression", parameterProgression); 
+
+		//End analytics
 
 		//Save
 		s_Instance.StartCoroutine(s_Instance.SaveGameCoroutine());
